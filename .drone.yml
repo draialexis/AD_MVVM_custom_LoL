@@ -1,0 +1,51 @@
+kind: pipeline
+type: docker 
+name: CI
+ 
+trigger:
+  event:
+    - push
+
+steps:
+  # Les fichiers swagger.[yml|json] doivent être dans le répertoire /docs
+  - name: build
+    image: hub.codefirst.iut.uca.fr/marc.chevaldonne/codefirst-dotnet7-maui:latest
+    commands:
+      - cd Sources/
+      - dotnet restore LeagueOfLegends.sln
+      - dotnet build LeagueOfLegends.sln -c Release --no-restore /p:AndroidSdkDirectory=$ANDROID_SDK_ROOT -property:Aapt2ToolPath=$ANDROID_SDK_ROOT/build-tools/33.0.0
+      - dotnet publish LolApp/LolApp.csproj -c Release --no-restore -o $CI_PROJECT_DIR/build/release -f:net7.0-android /p:AndroidSdkDirectory=/usr/lib/android-sdk
+      
+  - name: tests
+    image: hub.codefirst.iut.uca.fr/marc.chevaldonne/codefirst-dotnet7-maui:latest
+    commands:
+      - cd Sources/
+      - dotnet restore LeagueOfLegends.sln
+      - dotnet test LeagueOfLegends.sln --no-restore /p:AndroidSdkDirectory=$ANDROID_SDK_ROOT -property:Aapt2ToolPath=$ANDROID_SDK_ROOT/build-tools/33.0.0
+    depends_on: [build]
+
+  - name: code-analysis 
+    image: hub.codefirst.iut.uca.fr/marc.chevaldonne/codefirst-dronesonarplugin-dotnet7-maui
+    commands:
+      - cd Sources/
+      - dotnet restore LeagueOfLegends.sln
+      - dotnet sonarscanner begin /k:$${project_key} /d:sonar.host.url=$${sonar_host} /d:sonar.coverageReportPaths="coveragereport/SonarQube.xml" /d:sonar.coverage.exclusions=$${coverage_exclusions} /d:sonar.login=$${sonar_token} 
+      - dotnet build LeagueOfLegends.sln -c Release --no-restore /p:AndroidSdkDirectory=$ANDROID_SDK_ROOT -property:Aapt2ToolPath=$ANDROID_SDK_ROOT/build-tools/33.0.0
+      - dotnet test LeagueOfLegends.sln --logger trx --no-restore /p:AndroidSdkDirectory=$ANDROID_SDK_ROOT -property:Aapt2ToolPath=$ANDROID_SDK_ROOT/build-tools/33.0.0 /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura --collect "XPlat Code Coverage"
+      - reportgenerator -reports:"**/coverage.cobertura.xml" -reporttypes:SonarQube -targetdir:"coveragereport"
+      - dotnet publish LolApp/LolApp.csproj -c Release --no-restore -o $CI_PROJECT_DIR/build/release -f:net7.0-android /p:AndroidSdkDirectory=/usr/lib/android-sdk
+      - dotnet sonarscanner end /d:sonar.login=$${sonar_token}
+    secrets: [ SECRET_SONAR_LOGIN ]
+    environment:
+      sonar_host: https://codefirst.iut.uca.fr/sonar/
+      sonar_token:
+        from_secret: SECRET_SONAR_LOGIN
+      project_key: efLol
+      coverage_exclusions: "Tests/**"
+#    when:
+#      branch:
+#        - master
+#      event:
+#        - push
+#        - pull_request
+    depends_on: [tests]
