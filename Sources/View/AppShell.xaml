@@ -1,11 +1,20 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<Shell
-    x:Class="View.AppShell"
-    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    xmlns:local="clr-namespace:View.Views"
-    Shell.FlyoutBehavior="Disabled">
+<Shell xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+       xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+       xmlns:local="clr-namespace:View.Views"
+       x:Class="View.AppShell"
+       Shell.FlyoutBehavior="Disabled">
+    <TabBar>
+        <ShellContent
+            Icon="icon_home.png"
+            Title="Home"
+            ContentTemplate="{DataTemplate local:HomePage}"
+            Route="HomePage" />
 
-    <local:ChampionsPage />
-
+        <ShellContent
+            Icon="icon_champions.png"
+            Title="Champions"
+            ContentTemplate="{DataTemplate local:ChampionsPage}"
+            Route="ChampionsPage" />
+    </TabBar>
 </Shell>
