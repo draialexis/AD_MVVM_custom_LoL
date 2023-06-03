@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:ViewModel;assembly=ViewModel"
+             xmlns:conv="clr-namespace:View.Converters"
+             x:Class="View.Views.ChampionPage"
+             x:DataType="vm:ChampionVM"
+             Title="{Binding Name}">
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <conv:Base64ImageSourceConverter x:Key="Base64" />
+        </ResourceDictionary>
+    </ContentPage.Resources>
+    <ScrollView Margin="32">
+        <VerticalStackLayout>
+
+            <Image Source="{Binding Icon, Converter={StaticResource Base64}}" />
+
+            <StackLayout Orientation="Horizontal">
+                <Label Text="{Binding Name}"
+                       FontSize="Large"
+                       FontAttributes="Bold" 
+                       HorizontalOptions="StartAndExpand"/>
+                <Label Text="{Binding Class}"
+                       HorizontalOptions="End" />
+            </StackLayout>
+
+            <Label Text="{Binding Bio}" />
+
+            <Label Text="Caractéristiques"
+                   FontSize="Large"
+                   FontAttributes="Bold" />
+
+            <CollectionView ItemsSource="{Binding Characteristics}"
+                            ItemsLayout="VerticalGrid, 3">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="vm:CharacteristicVM">
+                        <Border>
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <Label Text="{Binding Key}" 
+                                   Grid.Row="0" 
+                                   HorizontalOptions="CenterAndExpand" />
+                                <Label Text="{Binding Value}" 
+                                   Grid.Row="1" 
+                                   HorizontalOptions="CenterAndExpand" />
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

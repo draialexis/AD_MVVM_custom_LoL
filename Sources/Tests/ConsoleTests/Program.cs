@@ -37,9 +37,6 @@ namespace ConsoleTests
 			Dictionary<int, string> choices = new Dictionary<int, string>()
 			{
 				[1] = "1- Manage Champions",
-				[2] = "2- Manage Skins",
-				[3] = "3- Manage Runes",
-				[4] = "4- Manage Rune Pages",
 				[99] = "99- Quit"
 			};
 
@@ -51,12 +48,6 @@ namespace ConsoleTests
 				{
 					case 1:
 						await DisplayChampionsMenu();
-						break;
-					case 2:
-						break;
-					case 3:
-						break;
-					case 4:
 						break;
 					case 99:
 						WriteLine("Bye bye!");

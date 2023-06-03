@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:ViewModel;assembly=ViewModel"
+             xmlns:conv="clr-namespace:View.Converters"
+             xmlns:view="clr-namespace:View;assembly=View"
+             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+             x:Class="View.Views.ChampionsPage"
+             x:DataType="view:AppVM.MainAppVM"
+			 Title="Champions">
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <conv:Base64ImageSourceConverter x:Key="Base64" />
+            <conv:SelectedItemEventArgsConverter x:Key="SelectedItemEventArgsConverter" />
+        </ResourceDictionary>
+    </ContentPage.Resources>
+    <ScrollView Margin="32">
+        <StackLayout Orientation="Vertical">
+            <CollectionView ItemsSource="{Binding ChampionsMgrVM.ChampionsVM}"
+                        SelectionMode="Single">
+                <CollectionView.Behaviors>
+                    <toolkit:EventToCommandBehavior 
+                    EventName="SelectionChanged"
+                    Command="{Binding SelectChampionCommand}"
+                    EventArgsConverter="{StaticResource SelectedItemEventArgsConverter}" />
+                </CollectionView.Behaviors>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="vm:ChampionVM">
+                        <StackLayout Orientation="Vertical">
+                            <StackLayout Orientation="Horizontal">
+                                <Image Source="{Binding Icon, Converter={StaticResource Base64}}"
+                                   WidthRequest="50"
+                                   HeightRequest="50"/>
+                                <StackLayout Orientation="Vertical">
+                                    <Label Text="{Binding Name}"
+                                       VerticalOptions="CenterAndExpand" 
+                                       HorizontalOptions="StartAndExpand"
+                                       FontAttributes="Bold"/>
+                                    <Label Text="{Binding Class}"
+                                       VerticalOptions="CenterAndExpand" 
+                                       HorizontalOptions="StartAndExpand"
+                                       FontSize="Caption"/>
+                                </StackLayout>
+                            </StackLayout>
+                            <BoxView HeightRequest="1" BackgroundColor="Gray" Margin="10,10,10,0"/>
+                        </StackLayout>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+            <StackLayout Orientation="Horizontal">
+                <Button Text="Previous" 
+                    Command="{Binding ChampionsMgrVM.PreviousPageCommand}" />
+                <Button Text="Next" 
+                    Command="{Binding ChampionsMgrVM.NextPageCommand}" />
+            </StackLayout>
+        </StackLayout>
+    </ScrollView>
+</ContentPage>

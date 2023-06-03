@@ -190,15 +190,6 @@ namespace StubLib
             public Task<IEnumerable<Champion?>> GetItemsBySkill(string skillSubstring, int index, int count, string? orderingPropertyName = null, bool descending = false)
                 => parent.champions.GetItemsWithFilterAndOrdering(champ => filterBySkillSubstring(champ, skillSubstring), index, count, orderingPropertyName, descending);
 
-            public Task<int> GetNbItemsByRunePage(RunePage? runePage)
-                => Task.FromResult(parent.championsAndRunePages.Count(tuple => tuple.Item2.Equals(runePage)));
-
-            public Task<IEnumerable<Champion?>> GetItemsByRunePage(RunePage? runePage, int index, int count, string? orderingPropertyName = null, bool descending = false)
-                => Task.FromResult<IEnumerable<Champion?>>
-                            (parent.championsAndRunePages
-                                    .Where(tuple => tuple.Item2.Equals(runePage))
-                                    .Select(tuple => tuple.Item1)
-                                    .Skip(index*count).Take(count));
 
             private Func<Champion, string, bool> filterByName = (champ, substring) => champ.Name.Contains(substring, StringComparison.InvariantCultureIgnoreCase);
 
