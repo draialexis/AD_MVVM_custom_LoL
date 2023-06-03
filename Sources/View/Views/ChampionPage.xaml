@@ -11,10 +11,15 @@
             <conv:Base64ImageSourceConverter x:Key="Base64" />
         </ResourceDictionary>
     </ContentPage.Resources>
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="Modifier" 
+                     Clicked="OnUpdateChampionRequested" />
+        <!-- Command="{Binding UpdateChampionCommand}" -->
+        <!-- FIXME use a command to access the ChampionFormPage -->
+    </ContentPage.ToolbarItems>
     <ScrollView Margin="32">
-        <VerticalStackLayout>
-
-            <Image Source="{Binding Icon, Converter={StaticResource Base64}}" />
+        <StackLayout Orientation="Vertical">
+            <Image Source="{Binding Image, Converter={StaticResource Base64}}" />
 
             <StackLayout Orientation="Horizontal">
                 <Label Text="{Binding Name}"
@@ -52,7 +57,6 @@
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
             </CollectionView>
-
-        </VerticalStackLayout>
+        </StackLayout>
     </ScrollView>
 </ContentPage>

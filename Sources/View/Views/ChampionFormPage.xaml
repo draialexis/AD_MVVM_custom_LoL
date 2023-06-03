@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:ViewModel;assembly=ViewModel"
+             xmlns:conv="clr-namespace:View.Converters"
+             x:Class="View.Views.ChampionFormPage"
+             x:DataType="vm:ChampionVM"
+             Title="{Binding Name, FallbackValue='Nouveau champion'}">
+    <ScrollView Margin="32">
+		<StackLayout Orientation="Vertical">
+			<Label Text="Hello ChampionFormPage" />
+        </StackLayout>
+    </ScrollView>
+</ContentPage>

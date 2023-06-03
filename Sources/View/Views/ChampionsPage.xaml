@@ -14,10 +14,14 @@
             <conv:SelectedItemEventArgsConverter x:Key="SelectedItemEventArgsConverter" />
         </ResourceDictionary>
     </ContentPage.Resources>
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="Ajouter" 
+                     Command="{Binding AddChampionCommand}"/>
+    </ContentPage.ToolbarItems>
     <ScrollView Margin="32">
         <StackLayout Orientation="Vertical">
             <CollectionView ItemsSource="{Binding ChampionsMgrVM.ChampionsVM}"
-                        SelectionMode="Single">
+                            SelectionMode="Single">
                 <CollectionView.Behaviors>
                     <toolkit:EventToCommandBehavior 
                     EventName="SelectionChanged"

@@ -13,5 +13,10 @@ namespace View.Views
             InitializeComponent();
             BindingContext = ChampionVM;
         }
+
+        private void OnUpdateChampionRequested(object sender, EventArgs e)
+        {
+            Navigation?.PushAsync(new ChampionFormPage(ChampionVM));
+        }
     }
 }
