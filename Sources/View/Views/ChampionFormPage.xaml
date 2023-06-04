@@ -3,12 +3,114 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:ViewModel;assembly=ViewModel"
              xmlns:conv="clr-namespace:View.Converters"
+             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+             x:Name="ThisChampionFormPage"
              x:Class="View.Views.ChampionFormPage"
-             x:DataType="vm:ChampionVM"
-             Title="{Binding Name, FallbackValue='Nouveau champion'}">
+             x:DataType="vm:ChampionFormVM"
+             Title="{Binding ChampionVM.Name}">
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <conv:Base64ImageSourceConverter x:Key="Base64" />
+            <conv:TupleConverter x:Key="TupleConverter" />
+        </ResourceDictionary>
+    </ContentPage.Resources>
     <ScrollView Margin="32">
-		<StackLayout Orientation="Vertical">
-			<Label Text="Hello ChampionFormPage" />
+        <StackLayout Orientation="Vertical">
+            <StackLayout Orientation="Horizontal" Margin="16">
+                <Label Text="Nom: " />
+                <Label Text="{Binding ChampionVM.Name}" />
+            </StackLayout>
+            <StackLayout Orientation="Horizontal" Margin="16">
+                <Label Text="Icone: " />
+                <Image Source="{Binding ChampionVM.Icon, Converter={StaticResource Base64}}" 
+                       WidthRequest="50"
+                       HeightRequest="50" />
+                <Button Text="Changer"
+                        Clicked="OnUploadIconButtonClicked" />
+            </StackLayout>
+            <StackLayout Orientation="Vertical" Margin="16">
+                <Label Text="Image: " />
+                <Image Source="{Binding ChampionVM.Image, Converter={StaticResource Base64}}" />
+                <Button Text="Changer"
+                        Clicked="OnUploadImageButtonClicked" />
+            </StackLayout>
+            <StackLayout Orientation="Horizontal" Margin="16">
+                <Label Text="Bio: " />
+                <Editor Text="{Binding ChampionVM.Bio, Mode=TwoWay}"
+                        VerticalOptions="FillAndExpand"
+                        HorizontalOptions="FillAndExpand"
+                        HeightRequest="100" />
+            </StackLayout>
+            <StackLayout Orientation="Horizontal" Margin="16">
+                <Label Text="Classe: " />
+                <Picker ItemsSource="{Binding AllClasses}" 
+                        SelectedItem="{Binding ChampionVM.Class, Mode=TwoWay}" />
+            </StackLayout>
+            <StackLayout Orientation="Vertical" Margin="16">
+                <Label Text="Caractéristiques: " />
+                <CollectionView ItemsSource="{Binding ChampionVM.Characteristics}">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="vm:CharacteristicVM">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="150" />
+                                    <ColumnDefinition Width="60" />
+                                    <ColumnDefinition Width="50" />
+                                    <ColumnDefinition Width="50" />
+                                </Grid.ColumnDefinitions>
+                                <Label x:Name="ExistingCharacteristicKey" 
+                                       Text="{Binding Key}" 
+                                       Grid.Column="0" />
+                                <Entry x:Name="ExistingCharacteristicValue" 
+                                       Keyboard="Numeric" 
+                                       Text="{Binding Value}" 
+                                       Grid.Column="1" >
+                                    <Entry.Behaviors>
+                                        <toolkit:NumericValidationBehavior MaximumDecimalPlaces="0"/>
+                                    </Entry.Behaviors>
+                                </Entry>
+                                <Button Text="✔️"
+                                        Command="{Binding Source={x:RelativeSource AncestorType={x:Type vm:ChampionFormVM}}, Path=UpdateCharacteristicCommand}"
+                                        CommandParameter="{Binding .}"
+                                        Grid.Column="2"/>
+                                <Button Text="-" 
+                                        Command="{Binding Source={x:RelativeSource AncestorType={x:Type vm:ChampionFormVM}}, Path=DeleteCharacteristicCommand}"
+                                        CommandParameter="{Binding .}"
+                                        Grid.Column="3"/>
+                            </Grid>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+                <StackLayout Orientation="Horizontal" Margin="16">
+                    <Entry x:Name="NewCharacteristicKey" 
+                           Text=""
+                           WidthRequest="100"/>
+                    <Entry x:Name="NewCharacteristicValue"
+                           Keyboard="Numeric" 
+                           Text="" 
+                           WidthRequest="100" >
+                        <Entry.Behaviors>
+                            <toolkit:NumericValidationBehavior MaximumDecimalPlaces="0"/>
+                        </Entry.Behaviors>
+                    </Entry>
+                    <Button Text="+"
+                            Command="{Binding AddCharacteristicCommand}"
+                            Clicked="OnAddCharacteristicClicked" >
+                        <Button.CommandParameter>
+                            <MultiBinding Converter="{StaticResource TupleConverter}">
+                                <Binding Path="Text" Source="{x:Reference NewCharacteristicKey}" />
+                                <Binding Path="Text" Source="{x:Reference NewCharacteristicValue}" />
+                            </MultiBinding>
+                        </Button.CommandParameter>
+                    </Button>
+                </StackLayout>
+            </StackLayout>
+            <!-- TODO[Add] when saving a new Champion, invoke a different command? or maybe modify the command to become an UpsertingCommand --> 
+            <Button Text="Enregister"
+                    Command="{Binding Source={x:Reference ThisChampionFormPage}, Path=MainAppVM.NavToAllChampionsAfterUpdatingCommand}"
+                    CommandParameter="{Binding .}" />
+            <Button Text="Annuler"
+                    Command="{Binding Source={x:Reference ThisChampionFormPage}, Path=MainAppVM.NavBackCommand}" />
         </StackLayout>
     </ScrollView>
 </ContentPage>

@@ -1,4 +1,5 @@
-﻿using ViewModel;
+﻿using View.AppVM;
+using ViewModel;
 
 namespace View.Views
 {
@@ -7,16 +8,15 @@ namespace View.Views
         public ChampionVM ChampionVM => championVM;
         private readonly ChampionVM championVM;
 
-        public ChampionPage(ChampionVM championVM)
+        public MainAppVM MainAppVM => mainAppVM;
+        private readonly MainAppVM mainAppVM;
+
+        public ChampionPage(ChampionVM championVM, MainAppVM mainAppVM)
         {
             this.championVM = championVM;
+            this.mainAppVM = mainAppVM;
             InitializeComponent();
             BindingContext = ChampionVM;
-        }
-
-        private void OnUpdateChampionRequested(object sender, EventArgs e)
-        {
-            Navigation?.PushAsync(new ChampionFormPage(ChampionVM));
         }
     }
 }

@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:ViewModel;assembly=ViewModel"
              xmlns:conv="clr-namespace:View.Converters"
+             x:Name="ThisChampionPage"
              x:Class="View.Views.ChampionPage"
              x:DataType="vm:ChampionVM"
              Title="{Binding Name}">
@@ -13,9 +14,8 @@
     </ContentPage.Resources>
     <ContentPage.ToolbarItems>
         <ToolbarItem Text="Modifier" 
-                     Clicked="OnUpdateChampionRequested" />
-        <!-- Command="{Binding UpdateChampionCommand}" -->
-        <!-- FIXME use a command to access the ChampionFormPage -->
+                     Command="{Binding Source={x:Reference ThisChampionPage}, Path=MainAppVM.NavToUpdateChampionCommand}"
+                     CommandParameter="{Binding .}" />
     </ContentPage.ToolbarItems>
     <ScrollView Margin="32">
         <StackLayout Orientation="Vertical">

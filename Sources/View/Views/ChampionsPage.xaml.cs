@@ -9,5 +9,11 @@
             mainAppVm.Navigation = this.Navigation;
             BindingContext = mainAppVm;
         }
+        protected override void OnAppearing()
+        {
+            base.OnAppearing();
+            Champions.SelectedItem = null;
+        }
+
     }
 }
