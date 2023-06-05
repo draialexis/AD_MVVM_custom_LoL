@@ -31,10 +31,17 @@
                 </CollectionView.Behaviors>
                 <CollectionView.ItemTemplate>
                     <DataTemplate x:DataType="vm:ChampionVM">
+                        <!--FIXME when swiping on the emulator, because swiping is done with clicking and dragging, I end up clicking on the 
+                        champion first and getting navigated to the championPage with details. Then I have to nav back, and click on the now exposed 
+                        'Modifier' or 'supprimer' button. Would it work fine on a real phone? -->
                         <SwipeView>
                             <SwipeView.RightItems>
                                 <SwipeItems>
-                                    <SwipeItem Text="Update"
+                                    <SwipeItem Text="Supprimer"
+                                               Command="{Binding Source={x:RelativeSource AncestorType={x:Type view:AppVM.MainAppVM}}, Path=ChampionsMgrVM.DeleteChampionCommand}"
+                                               CommandParameter="{Binding .}"
+                                               BackgroundColor="DarkSalmon" />
+                                    <SwipeItem Text="Modifier"
                                                Command="{Binding Source={x:RelativeSource AncestorType={x:Type view:AppVM.MainAppVM}}, Path=NavToUpdateChampionCommand}"
                                                CommandParameter="{Binding .}"
                                                BackgroundColor="LightGreen" />

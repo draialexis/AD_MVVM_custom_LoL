@@ -15,6 +15,7 @@ namespace ViewModel
         public ICommand NextPageCommand { get; private set; }
         public ICommand PreviousPageCommand { get; private set; }
         public ICommand UpsertChampionFormVMCommand { get; private set; }
+        public ICommand DeleteChampionCommand { get; private set; }
 
         public ChampionsMgrVM(IDataManager dataManager)
         {
@@ -49,6 +50,13 @@ namespace ViewModel
                 canExecute:
                     (ChampionFormVM championFormVM)
                         => DataManager is not null && DataManager.ChampionsMgr is not null && championFormVM is not null
+                );
+
+            DeleteChampionCommand = new Command<ChampionVM>(
+                execute: async (ChampionVM championVM) => await DeleteChampion(championVM),
+                canExecute: 
+                    (ChampionVM championVM) 
+                        => DataManager is not null && DataManager.ChampionsMgr is not null && championVM is not null
                 );
         }
 
@@ -87,7 +95,6 @@ namespace ViewModel
 
         private readonly ObservableCollection<ChampionVM> championsVM = new();
 
-        // TODO[Delete] remember to update TotalItemCount whenever the underlying data changes (addChampion or deleteChampion)
         public int TotalItemCount
         {
             get => totalItemCount;
@@ -106,15 +113,16 @@ namespace ViewModel
             get
             {
                 int nbPagesRoundedDown = TotalItemCount / Count;
-                bool isCleanDivision = TotalItemCount % Count == 0 || TotalItemCount == 0;
+                bool noRemainderOrNoItems = TotalItemCount % Count == 0 || TotalItemCount == 0;
 
-                return nbPagesRoundedDown + (isCleanDivision ? 0 : 1);
+                return nbPagesRoundedDown + (noRemainderOrNoItems ? 0 : 1);
             }
         }
 
         private async Task UpdateTotalItemCount()
         {
             TotalItemCount = await DataManager.ChampionsMgr.GetNbItems();
+            OnPropertyChanged(nameof(NbAvailablePages));
         }
 
         private async Task LoadChampions(int index, int count)
@@ -163,14 +171,27 @@ namespace ViewModel
 
             if (preExistingChampion is null)
             {
-                await DataManager.ChampionsMgr.AddItem(championFormVM.ChampionVM.Model);
-                await UpdateTotalItemCount();
+                if(await DataManager.ChampionsMgr.AddItem(championFormVM.ChampionVM.Model) is not null)
+                {
+                    await UpdateTotalItemCount();
+                }
             }
             else
             {
                 await DataManager.ChampionsMgr.UpdateItem(preExistingChampion, championFormVM.ChampionVM.Model);
             }
             LoadChampionsCommand.Execute(null);
+        }
+
+        private async Task DeleteChampion(ChampionVM championVM)
+        {
+            Debug.WriteLine("I WAS HERE");
+            if (await DataManager.ChampionsMgr.DeleteItem(championVM.Model))
+            {
+                Debug.WriteLine("HUH?");
+                await UpdateTotalItemCount();
+                LoadChampionsCommand.Execute(null);
+            }
         }
 
         private async Task<Champion?> GetChampionByUniqueName(string name)
