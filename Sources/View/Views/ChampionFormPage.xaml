@@ -53,7 +53,7 @@
                         <DataTemplate x:DataType="vm:CharacteristicVM">
                             <Grid>
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="150" />
+                                    <ColumnDefinition Width="130" />
                                     <ColumnDefinition Width="60" />
                                     <ColumnDefinition Width="50" />
                                     <ColumnDefinition Width="50" />
@@ -105,9 +105,8 @@
                     </Button>
                 </StackLayout>
             </StackLayout>
-            <!-- TODO[Add] when saving a new Champion, invoke a different command? or maybe modify the command to become an UpsertingCommand --> 
             <Button Text="Enregister"
-                    Command="{Binding Source={x:Reference ThisChampionFormPage}, Path=MainAppVM.NavToAllChampionsAfterUpdatingCommand}"
+                    Command="{Binding Source={x:Reference ThisChampionFormPage}, Path=MainAppVM.NavToAllChampionsAfterUpsertingCommand}"
                     CommandParameter="{Binding .}" />
             <Button Text="Annuler"
                     Command="{Binding Source={x:Reference ThisChampionFormPage}, Path=MainAppVM.NavBackCommand}" />

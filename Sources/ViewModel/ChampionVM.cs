@@ -27,8 +27,7 @@ namespace ViewModel
 
         public ChampionVM(Champion model)
         {
-            Model = model;
-
+            Model = model ?? throw new ArgumentNullException(nameof(model));
             UpdateCharacteristicsVM();
         }
 
@@ -38,6 +37,11 @@ namespace ViewModel
         /// <param name="championVM"></param>
         public ChampionVM(ChampionVM championVM)
         {
+            if (championVM is null || championVM.Model is null)
+            {
+                throw new ArgumentNullException(nameof(championVM));
+            }
+
             Champion modelClone = new(championVM.Name)
             {
                 Class = championVM.Model.Class,
@@ -45,9 +49,7 @@ namespace ViewModel
                 Image = championVM.Model.Image,
                 Bio = championVM.Model.Bio,
             };
-
             Model = modelClone;
-
             foreach (var characteristic in championVM.Model.Characteristics)
             {
                 Model.AddCharacteristics(new Tuple<string, int>(characteristic.Key, characteristic.Value));
@@ -55,12 +57,10 @@ namespace ViewModel
 
             UpdateCharacteristicsVM();
         }
-
         public string Name
         {
             get => Model.Name;
         }
-
         public string Icon
         {
             get => Model.Icon;
@@ -112,7 +112,7 @@ namespace ViewModel
         {
             get => new(characteristics);
         }
-        private ObservableCollection<CharacteristicVM> characteristics;
+        private ObservableCollection<CharacteristicVM> characteristics = new();
 
         private void UpdateCharacteristicsVM()
         {
@@ -130,12 +130,9 @@ namespace ViewModel
             {
                 throw new ArgumentException(null, nameof(characteristicsTuples));
             }
-            foreach (var characteristic in characteristicsTuples)
+            if (characteristicsTuples.Any(llanfairpwllgwyngyllgogerychwyrndrobwllllantisiliogogogoch => string.IsNullOrWhiteSpace(llanfairpwllgwyngyllgogerychwyrndrobwllllantisiliogogogoch.Item1)))
             {
-                if (string.IsNullOrWhiteSpace(characteristic.Item1))
-                {
-                    throw new ArgumentException(null, nameof(characteristicsTuples));
-                }
+                throw new ArgumentException(null, nameof(characteristicsTuples));
             }
 
             Model.AddCharacteristics(characteristicsTuples);

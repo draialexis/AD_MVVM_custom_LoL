@@ -1,5 +1,5 @@
 ﻿using Model;
-using System.IO;
+using System.Collections.ObjectModel;
 using System.Windows.Input;
 
 namespace ViewModel
@@ -26,6 +26,7 @@ namespace ViewModel
             }
             else
             {
+                // Getting a clone, to be able to make users actively save their changes
                 ChampionVM = new ChampionVM(championVM);
             }
 
@@ -37,13 +38,13 @@ namespace ViewModel
 
             UpdateCharacteristicCommand = new Command<CharacteristicVM>(
                 execute: UpdateCharacteristic,
-                canExecute: (CharacteristicVM characteristic) => 
+                canExecute: (CharacteristicVM characteristic) =>
                 ChampionVM is not null && characteristic is not null && !string.IsNullOrWhiteSpace(characteristic.Key)
                 );
 
             DeleteCharacteristicCommand = new Command<CharacteristicVM>(
                 execute: DeleteCharacteristic,
-                canExecute: (CharacteristicVM characteristic) => 
+                canExecute: (CharacteristicVM characteristic) =>
                 ChampionVM is not null && characteristic is not null && !string.IsNullOrWhiteSpace(characteristic.Key)
                 );
 
@@ -83,7 +84,7 @@ namespace ViewModel
             ChampionVM.Image = Convert.ToBase64String(imageBytes);
         }
 
-        public List<string> AllClasses => Enum.GetNames(typeof(ChampionClass)).ToList();
-
+        public ReadOnlyCollection<string> AllClasses => allClasses;
+        private static readonly ReadOnlyCollection<string> allClasses = new(Enum.GetNames(typeof(ChampionClass)).ToList());
     }
 }

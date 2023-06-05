@@ -11,8 +11,8 @@ namespace View
         public App(IServiceProvider services)
         {
             InitializeComponent();
-            MainAppVM = services.GetService<MainAppVM>();
-            ChampionsMgrVM = services.GetService<ChampionsMgrVM>();
+            MainAppVM = services.GetService<MainAppVM>()!;
+            ChampionsMgrVM = services.GetService<ChampionsMgrVM>()!;
             ChampionsMgrVM.InitializeCommand.Execute(null);
             MainPage = new AppShell();
         }

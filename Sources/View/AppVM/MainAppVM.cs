@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using System.Windows.Input;
+﻿using System.Windows.Input;
 using View.Views;
 using ViewModel;
 
@@ -9,34 +8,37 @@ namespace View.AppVM
     {
         public INavigation Navigation { get; set; }
 
-        public ChampionsMgrVM ChampionsMgrVM => (Application.Current as App).ChampionsMgrVM;
+        public ChampionsMgrVM ChampionsMgrVM => (Application.Current as App)!.ChampionsMgrVM;
 
         public ICommand NavToSelectChampionCommand { get; private set; }
         public ICommand NavToAddChampionCommand { get; private set; }
         public ICommand NavToUpdateChampionCommand { get; private set; }
-        public ICommand NavToAllChampionsAfterUpdatingCommand { get; private set; }
+        public ICommand NavToAllChampionsAfterUpsertingCommand { get; private set; }
         public ICommand NavToAllChampionsCommand { get; private set; }
         public ICommand NavBackCommand { get; private set; }
 
+        // Navigation is initialized in ChampionsPage.xaml.cs, which is the entrypoint for the Champions tab
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
         public MainAppVM()
+#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
         {
             NavToSelectChampionCommand = new Command<ChampionVM>(
-                execute: NavToSelectChampion,
+                execute: async (ChampionVM selectedChampion) => await NavToSelectChampion(selectedChampion),
                 canExecute: (ChampionVM selectedChampion) => ChampionsMgrVM is not null && selectedChampion is not null
                 );
 
             NavToAddChampionCommand = new Command(
-                execute: NavToAddChampion,
+                execute: async () => await NavToAddChampion(),
                 canExecute: () => ChampionsMgrVM is not null
-                ); // TODO[Add] when champion name is an argument, set canExecute to false when name is null or blank
+                );
 
             NavToUpdateChampionCommand = new Command<ChampionVM>(
-                execute: NavToUpdateChampion,
+                execute: async (ChampionVM championToUpdate) => await NavToUpdateChampion(championToUpdate),
                 canExecute: (ChampionVM championToUpdate) => ChampionsMgrVM is not null && championToUpdate is not null
                 );
 
-            NavToAllChampionsAfterUpdatingCommand = new Command<ChampionFormVM>(
-                execute: NavToAllChampionsAfterUpdating,
+            NavToAllChampionsAfterUpsertingCommand = new Command<ChampionFormVM>(
+                execute: NavToAllChampionsAfterUpserting,
                 canExecute: (ChampionFormVM championFormVM) => ChampionsMgrVM is not null && championFormVM is not null
                 );
 
@@ -45,37 +47,44 @@ namespace View.AppVM
             NavBackCommand = new Command(NavBack);
         }
 
-        // FIXME make all nav methods async and use async Task / await ?
-
-        private void NavToSelectChampion(ChampionVM selectedChampion)
+        private async Task NavToSelectChampion(ChampionVM selectedChampion)
         {
-            Navigation?.PushAsync(new ChampionPage(selectedChampion, this));
+            await Navigation.PushAsync(new ChampionPage(selectedChampion, this));
         }
 
-        private void NavToAddChampion()
+        private async Task NavToAddChampion()
         {
-            Navigation?.PushAsync(new ChampionFormPage(new(null, "TODO[Add] make this champion name into a user-chosen argument when tackling 'Add'"), ChampionsMgrVM, this));
+            string result =
+                await (Application.Current as App)!.MainPage!
+                    .DisplayPromptAsync("Nouveau champion", "Choisissons d'abord un nom :", cancel: "Annuler", accept: "Confirmer", maxLength: 255);
+
+            if (string.IsNullOrWhiteSpace(result))
+            {
+                return;
+            }
+
+            await Navigation.PushAsync(new ChampionFormPage(new(null, result), ChampionsMgrVM, this));
         }
 
-        private void NavToUpdateChampion(ChampionVM championToUpdate)
+        private async Task NavToUpdateChampion(ChampionVM championToUpdate)
         {
-            Navigation?.PushAsync(new ChampionFormPage(new(championToUpdate), ChampionsMgrVM, this));
+            await Navigation.PushAsync(new ChampionFormPage(new(championToUpdate), ChampionsMgrVM, this));
         }
 
-        private void NavToAllChampionsAfterUpdating(ChampionFormVM championFormVM)
+        private void NavToAllChampionsAfterUpserting(ChampionFormVM championFormVM)
         {
-            ChampionsMgrVM.UpdateChampionFormVMCommand.Execute(championFormVM);
+            ChampionsMgrVM.UpsertChampionFormVMCommand.Execute(championFormVM);
             NavToAllChampionsCommand.Execute(null);
         }
 
         private void NavToAllChampions()
         {
-            Navigation?.PushAsync(new ChampionsPage());
+            Navigation.PushAsync(new ChampionsPage());
         }
 
         private void NavBack()
         {
-            Navigation?.PopAsync();
+            Navigation.PopAsync();
         }
     }
 }

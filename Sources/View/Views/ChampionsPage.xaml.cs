@@ -5,7 +5,7 @@
         public ChampionsPage()
         {
             InitializeComponent();
-            var mainAppVm = (Application.Current as App).MainAppVM;
+            var mainAppVm = (Application.Current as App)!.MainAppVM;
             mainAppVm.Navigation = this.Navigation;
             BindingContext = mainAppVm;
         }
