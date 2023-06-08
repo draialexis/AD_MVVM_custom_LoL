@@ -13,6 +13,9 @@
         </ResourceDictionary>
     </ContentPage.Resources>
     <ContentPage.ToolbarItems>
+        <ToolbarItem Text="Supprimer" 
+                     Command="{Binding Source={x:Reference ThisChampionPage}, Path=MainAppVM.NavToAllChampionsAfterDeletingCommand}"
+                     CommandParameter="{Binding .}" />
         <ToolbarItem Text="Modifier" 
                      Command="{Binding Source={x:Reference ThisChampionPage}, Path=MainAppVM.NavToUpdateChampionCommand}"
                      CommandParameter="{Binding .}" />
@@ -52,6 +55,43 @@
                                 <Label Text="{Binding Value}" 
                                    Grid.Row="1" 
                                    HorizontalOptions="CenterAndExpand" />
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <Label Text="Compétences"
+                   FontSize="Large"
+                   FontAttributes="Bold" />
+            
+            <CollectionView ItemsSource="{Binding Skills}"
+                            ItemsLayout="VerticalGrid, 1">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="vm:SkillVM">
+                        <Border Padding="8">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="*"/>
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <Label Grid.Row="0" 
+                                       Grid.Column="0" 
+                                       Text="{Binding Name}" 
+                                       FontAttributes="Bold"/>
+                                <Label Grid.Row="0" 
+                                       Grid.Column="1" 
+                                       Text="{Binding Type}" 
+                                       HorizontalOptions="End"/>
+                                <Label Grid.Row="1" 
+                                       Grid.Column="0" 
+                                       Grid.ColumnSpan="2" 
+                                       Text="{Binding Description}" 
+                                       LineBreakMode="WordWrap"/>
                             </Grid>
                         </Border>
                     </DataTemplate>

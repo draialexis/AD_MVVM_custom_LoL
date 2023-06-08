@@ -4,7 +4,6 @@
              xmlns:vm="clr-namespace:ViewModel;assembly=ViewModel"
              xmlns:conv="clr-namespace:View.Converters"
              xmlns:view="clr-namespace:View;assembly=View"
-             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
              x:Class="View.Views.ChampionsPage"
              x:DataType="view:AppVM.MainAppVM"
 			 Title="Champions">
@@ -23,44 +22,56 @@
             <CollectionView x:Name="Champions"
                             ItemsSource="{Binding ChampionsMgrVM.ChampionsVM}"
                             SelectionMode="Single">
-                <CollectionView.Behaviors>
-                    <toolkit:EventToCommandBehavior 
-                        EventName="SelectionChanged"
-                        Command="{Binding NavToSelectChampionCommand}"
-                        EventArgsConverter="{StaticResource SelectedItemEventArgsConverter}" />
-                </CollectionView.Behaviors>
                 <CollectionView.ItemTemplate>
                     <DataTemplate x:DataType="vm:ChampionVM">
-                        <!--FIXME when swiping on the emulator, because swiping is done with clicking and dragging, I end up clicking on the 
-                        champion first and getting navigated to the championPage with details. Then I have to nav back, and click on the now exposed 
-                        'Modifier' or 'supprimer' button. Would it work fine on a real phone? -->
                         <SwipeView>
+                            <VisualStateManager.VisualStateGroups>
+                                <VisualStateGroup Name="CommonStates">
+                                    <VisualState Name="Normal"></VisualState>
+                                    <VisualState Name="Selected">
+                                        <VisualState.Setters>
+                                            <Setter Property="BackgroundColor" Value="Transparent"></Setter>
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                </VisualStateGroup>
+                            </VisualStateManager.VisualStateGroups>
                             <SwipeView.RightItems>
                                 <SwipeItems>
                                     <SwipeItem Text="Supprimer"
                                                Command="{Binding Source={x:RelativeSource AncestorType={x:Type view:AppVM.MainAppVM}}, Path=ChampionsMgrVM.DeleteChampionCommand}"
                                                CommandParameter="{Binding .}"
-                                               BackgroundColor="DarkSalmon" />
+                                               BackgroundColor="Crimson" />
                                     <SwipeItem Text="Modifier"
                                                Command="{Binding Source={x:RelativeSource AncestorType={x:Type view:AppVM.MainAppVM}}, Path=NavToUpdateChampionCommand}"
                                                CommandParameter="{Binding .}"
-                                               BackgroundColor="LightGreen" />
+                                               BackgroundColor="DarkGrey" />
                                 </SwipeItems>
                             </SwipeView.RightItems>
                             <SwipeView.Content>
                                 <StackLayout Orientation="Vertical">
                                     <StackLayout Orientation="Horizontal">
-                                        <Image Source="{Binding Icon, Converter={StaticResource Base64}}"
-                                               WidthRequest="50"
-                                               HeightRequest="50"/>
+                                        <Border Stroke="Gold"
+                                                StrokeThickness="6"
+                                                Margin="8">
+                                            <Border.StrokeShape>
+                                                <RoundRectangle CornerRadius="8" />
+                                            </Border.StrokeShape>
+                                            <Border.GestureRecognizers>
+                                                <TapGestureRecognizer 
+                                                    Command="{Binding Source={x:RelativeSource AncestorType={x:Type view:AppVM.MainAppVM}}, Path=NavToSelectChampionCommand}" 
+                                                    CommandParameter="{Binding .}" />
+                                            </Border.GestureRecognizers>
+                                            <Image Source="{Binding Icon, Converter={StaticResource Base64}}"
+                                               WidthRequest="60"
+                                               HeightRequest="60">
+                                            </Image>
+                                        </Border>
                                         <StackLayout Orientation="Vertical">
                                             <Label Text="{Binding Name}"
-                                                   VerticalOptions="CenterAndExpand" 
-                                                   HorizontalOptions="StartAndExpand"
+                                                   HorizontalOptions="Start"
                                                    FontAttributes="Bold"/>
                                             <Label Text="{Binding Class}"
-                                                   VerticalOptions="CenterAndExpand" 
-                                                   HorizontalOptions="StartAndExpand"
+                                                   HorizontalOptions="Start"
                                                    FontSize="Caption"/>
                                         </StackLayout>
                                     </StackLayout>
@@ -74,9 +85,14 @@
             <StackLayout Orientation="Horizontal">
                 <Button Text="&lt;" 
                         Command="{Binding ChampionsMgrVM.PreviousPageCommand}" />
-                <Label Text="{Binding ChampionsMgrVM.Index}" />
-                <Label Text="/" />
-                <Label Text="{Binding ChampionsMgrVM.NbAvailablePages}" />
+                <StackLayout Orientation="Horizontal"
+                             VerticalOptions="CenterAndExpand"
+                             Margin="8">
+                    <Label Text="{Binding ChampionsMgrVM.Index}" />
+                    <Label Text="/" />
+                    <Label Text="{Binding ChampionsMgrVM.NbAvailablePages}" />
+                </StackLayout>
+                
                 <Button Text="&gt;" 
                         Command="{Binding ChampionsMgrVM.NextPageCommand}" />
             </StackLayout>

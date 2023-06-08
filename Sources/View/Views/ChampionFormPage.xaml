@@ -11,7 +11,8 @@
     <ContentPage.Resources>
         <ResourceDictionary>
             <conv:Base64ImageSourceConverter x:Key="Base64" />
-            <conv:TupleConverter x:Key="TupleConverter" />
+            <conv:StringIntTupleConverter x:Key="StringInt" />
+            <conv:StringStringStringTupleConverter x:Key="StringStringString" />
         </ResourceDictionary>
     </ContentPage.Resources>
     <ScrollView Margin="32">
@@ -97,7 +98,7 @@
                             Command="{Binding AddCharacteristicCommand}"
                             Clicked="OnAddCharacteristicClicked" >
                         <Button.CommandParameter>
-                            <MultiBinding Converter="{StaticResource TupleConverter}">
+                            <MultiBinding Converter="{StaticResource StringInt}">
                                 <Binding Path="Text" Source="{x:Reference NewCharacteristicKey}" />
                                 <Binding Path="Text" Source="{x:Reference NewCharacteristicValue}" />
                             </MultiBinding>
@@ -105,11 +106,82 @@
                     </Button>
                 </StackLayout>
             </StackLayout>
-            <Button Text="Enregister"
-                    Command="{Binding Source={x:Reference ThisChampionFormPage}, Path=MainAppVM.NavToAllChampionsAfterUpsertingCommand}"
-                    CommandParameter="{Binding .}" />
-            <Button Text="Annuler"
-                    Command="{Binding Source={x:Reference ThisChampionFormPage}, Path=MainAppVM.NavBackCommand}" />
+            <StackLayout Orientation="Vertical" Margin="16">
+                <Label Text="Compétences: " />
+                <CollectionView ItemsSource="{Binding ChampionVM.Skills}">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="vm:SkillVM">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="80" />
+                                    <ColumnDefinition Width="80" />
+                                    <ColumnDefinition Width="100" />
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <Label x:Name="ExistingSkillName" 
+                                       Text="{Binding Name}" 
+                                       Grid.Row="0"
+                                       Grid.Column="0" />
+                                <Label x:Name="ExistingSkillType" 
+                                       Text="{Binding Type}" 
+                                       Grid.Row="0"
+                                       Grid.Column="1" />
+                                <Entry x:Name="ExistingSkillDescription" 
+                                       Text="{Binding Description}" 
+                                       Grid.Row="0"
+                                       Grid.Column="2" />
+                                <Button Text="✔️"
+                                        Command="{Binding Source={x:RelativeSource AncestorType={x:Type vm:ChampionFormVM}}, Path=UpdateSkillCommand}"
+                                        CommandParameter="{Binding .}"
+                                        Grid.Row="1"
+                                        Grid.Column="0"/>
+                                <Button Text="-" 
+                                        Command="{Binding Source={x:RelativeSource AncestorType={x:Type vm:ChampionFormVM}}, Path=DeleteSkillCommand}"
+                                        CommandParameter="{Binding .}"
+                                        Grid.Row="1"
+                                        Grid.Column="1"/>
+                            </Grid>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+                <StackLayout Orientation="Vertical">
+                    <StackLayout Orientation="Horizontal" Margin="16">
+                        <Entry x:Name="NewSkillName"
+                           Text="" 
+                           WidthRequest="80" />
+                        <Picker x:Name="NewSkillType" 
+                            ItemsSource="{Binding AllSkillTypes}"
+                            WidthRequest="80"/>
+                        <Entry x:Name="NewSkillDescription"
+                           Text="" 
+                           WidthRequest="100" />
+
+                    </StackLayout>
+                    <Button Text="+"
+                            Command="{Binding AddSkillCommand}"
+                            Clicked="OnAddSkillClicked" >
+                        <Button.CommandParameter>
+                            <MultiBinding Converter="{StaticResource StringStringString}">
+                                <Binding Path="Text" Source="{x:Reference NewSkillName}" />
+                                <Binding Path="SelectedItem" Source="{x:Reference NewSkillType}" />
+                                <Binding Path="Text" Source="{x:Reference NewSkillDescription}" />
+                            </MultiBinding>
+                        </Button.CommandParameter>
+                    </Button>
+                </StackLayout>
+            </StackLayout>
+            <StackLayout Orientation="Horizontal">
+                <Button Text="Enregister"
+                        Command="{Binding Source={x:Reference ThisChampionFormPage}, Path=MainAppVM.NavToAllChampionsAfterUpsertingCommand}"
+                        CommandParameter="{Binding .}" 
+                        Margin="4"/>
+                <Button Text="Annuler"
+                        Command="{Binding Source={x:Reference ThisChampionFormPage}, Path=MainAppVM.NavBackToChampionAfterCancelingEditCommand}"
+                        Margin="4"/>
+            </StackLayout>
         </StackLayout>
     </ScrollView>
 </ContentPage>

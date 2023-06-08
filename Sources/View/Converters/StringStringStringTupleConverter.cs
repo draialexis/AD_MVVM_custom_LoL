@@ -2,13 +2,16 @@
 
 namespace View.Converters
 {
-    public class TupleConverter : IMultiValueConverter
+    public class StringStringStringTupleConverter : IMultiValueConverter
     {
         public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
         {
-            if (values.Length == 2 && values[0] is string key && int.TryParse(values[1] as string, out int value))
+            if (values.Length == 3 &&
+                values[0] is string name &&
+                values[1] is string type &&
+                values[2] is string description)
             {
-                return new Tuple<string, int>(key, value);
+                return new Tuple<string, string, string>(name, type, description);
             }
             // It's fine that it might return null, but we can't change the methods return type accordingly
             // if we want to implement the interface
@@ -20,7 +23,8 @@ namespace View.Converters
 
         public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
         {
-            throw new NotImplementedException();
+            var tuple = (Tuple<string, string, string>)value;
+            return new object[] { tuple.Item1, tuple.Item2, tuple.Item3 };
         }
     }
 

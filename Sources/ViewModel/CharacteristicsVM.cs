@@ -1,10 +1,8 @@
-﻿using VMToolkit;
-
-namespace ViewModel
+﻿namespace ViewModel
 {
-    public class CharacteristicVM : PropertyChangeNotifier
+    public class CharacteristicVM
     {
-        public string Key { get; set; }
+        public required string Key { get; set; }
         public int Value { get; set; }
     }
 }

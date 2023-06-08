@@ -6,7 +6,6 @@ namespace ViewModel
 {
     public class ChampionVM : PropertyChangeNotifier
     {
-
         public Champion Model
         {
             get => model;
@@ -21,6 +20,7 @@ namespace ViewModel
                 OnPropertyChanged(nameof(Class));
                 OnPropertyChanged(nameof(Image));
                 OnPropertyChanged(nameof(Characteristics));
+                OnPropertyChanged(nameof(Skills));
             }
         }
         private Champion model;
@@ -29,6 +29,7 @@ namespace ViewModel
         {
             Model = model ?? throw new ArgumentNullException(nameof(model));
             UpdateCharacteristicsVM();
+            UpdateSkillsVM();
         }
 
         /// <summary>
@@ -54,13 +55,18 @@ namespace ViewModel
             {
                 Model.AddCharacteristics(new Tuple<string, int>(characteristic.Key, characteristic.Value));
             }
-
+            foreach (var skill in championVM.Model.Skills)
+            {
+                Model.AddSkill(new Skill(skill.Name, skill.Type, skill.Description));
+            }
+            UpdateSkillsVM();
             UpdateCharacteristicsVM();
         }
         public string Name
         {
             get => Model.Name;
         }
+
         public string Icon
         {
             get => Model.Icon;
@@ -181,5 +187,72 @@ namespace ViewModel
             AddCharacteristic(new Tuple<string, int>(characteristic.Key, characteristic.Value));
             UpdateCharacteristicsVM();
         }
+
+        public ReadOnlyObservableCollection<SkillVM> Skills
+        {
+            get => new(skills);
+        }
+        private ObservableCollection<SkillVM> skills = new();
+
+        private void UpdateSkillsVM()
+        {
+            skills = new();
+            foreach (var skill in Model.Skills)
+            {
+                skills.Add(new SkillVM(skill));
+            }
+            OnPropertyChanged(nameof(Skills));
+        }
+
+        public void AddSkill(Skill skill)
+        {
+            if (skill is null)
+            {
+                throw new ArgumentNullException(nameof(skill));
+            }
+
+            Model.AddSkill(skill);
+            UpdateSkillsVM();
+        }
+
+        public void AddSkill(string name, string type, string? description)
+        {
+            if (string.IsNullOrWhiteSpace(type) || string.IsNullOrWhiteSpace(name))
+            {
+                throw new ArgumentException("skill type or name was null or empty");
+            }
+
+            if (Enum.TryParse(type, out SkillType typeAsEnum))
+            {
+                AddSkill(new Skill(name, typeAsEnum, description ?? ""));
+            }
+        }
+
+        public void RemoveSkill(SkillVM skillVM)
+        {
+            if (skillVM is null)
+            {
+                throw new ArgumentNullException(nameof(skillVM));
+            }
+
+            var skill = Model.Skills.FirstOrDefault(s => s.Equals(skillVM.Model));
+            if (skill != null)
+            {
+                Model.RemoveSkill(skill);
+                UpdateSkillsVM();
+            }
+        }
+
+        public void UpdateSkill(SkillVM skillVM)
+        {
+            if (skillVM is null)
+            {
+                throw new ArgumentNullException(nameof(skillVM));
+            }
+
+            RemoveSkill(skillVM);
+            AddSkill(skillVM.Model);
+        }
     }
 }
+

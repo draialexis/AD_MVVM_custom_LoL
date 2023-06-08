@@ -13,9 +13,10 @@ namespace View.AppVM
         public ICommand NavToSelectChampionCommand { get; private set; }
         public ICommand NavToAddChampionCommand { get; private set; }
         public ICommand NavToUpdateChampionCommand { get; private set; }
+        public ICommand NavToAllChampionsAfterDeletingCommand { get; private set; }
         public ICommand NavToAllChampionsAfterUpsertingCommand { get; private set; }
-        public ICommand NavToAllChampionsCommand { get; private set; }
-        public ICommand NavBackCommand { get; private set; }
+        public ICommand NavToAllChampionsAfterEditingCommand { get; private set; }
+        public ICommand NavBackToChampionAfterCancelingEditCommand { get; private set; }
 
         // Navigation is initialized in ChampionsPage.xaml.cs, which is the entrypoint for the Champions tab
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
@@ -37,18 +38,24 @@ namespace View.AppVM
                 canExecute: (ChampionVM championToUpdate) => ChampionsMgrVM is not null && championToUpdate is not null
                 );
 
+            NavToAllChampionsAfterDeletingCommand = new Command<ChampionVM>(
+                execute: NavToAllChampionsAfterDeleting,
+                canExecute: (ChampionVM championVM) => ChampionsMgrVM is not null
+                );
+
             NavToAllChampionsAfterUpsertingCommand = new Command<ChampionFormVM>(
                 execute: NavToAllChampionsAfterUpserting,
                 canExecute: (ChampionFormVM championFormVM) => ChampionsMgrVM is not null && championFormVM is not null
                 );
 
-            NavToAllChampionsCommand = new Command(NavToAllChampions);
+            NavToAllChampionsAfterEditingCommand = new Command<bool>(NavToAllChampionsAfterEditing);
 
-            NavBackCommand = new Command(NavBack);
+            NavBackToChampionAfterCancelingEditCommand = new Command(NavBackToChampionAfterCancelingEdit);
         }
 
         private async Task NavToSelectChampion(ChampionVM selectedChampion)
         {
+            if (Navigation is null) return;
             await Navigation.PushAsync(new ChampionPage(selectedChampion, this));
         }
 
@@ -58,33 +65,44 @@ namespace View.AppVM
                 await (Application.Current as App)!.MainPage!
                     .DisplayPromptAsync("Nouveau champion", "Choisissons d'abord un nom :", cancel: "Annuler", accept: "Confirmer", maxLength: 255);
 
-            if (string.IsNullOrWhiteSpace(result))
-            {
-                return;
-            }
+            if (string.IsNullOrWhiteSpace(result)) return;
 
-            await Navigation.PushAsync(new ChampionFormPage(new(null, result), ChampionsMgrVM, this));
+            if (Navigation is null) return;
+            await Navigation.PushModalAsync(new ChampionFormPage(new(null, result), this));
         }
 
         private async Task NavToUpdateChampion(ChampionVM championToUpdate)
         {
-            await Navigation.PushAsync(new ChampionFormPage(new(championToUpdate), ChampionsMgrVM, this));
+            if (Navigation is null) return;
+            await Navigation.PushModalAsync(new ChampionFormPage(new(championToUpdate), this));
+        }
+
+        private void NavToAllChampionsAfterDeleting(ChampionVM championVM)
+        {
+            ChampionsMgrVM.DeleteChampionCommand.Execute(championVM);
+            NavToAllChampionsAfterEditingCommand.Execute(true);
         }
 
         private void NavToAllChampionsAfterUpserting(ChampionFormVM championFormVM)
         {
             ChampionsMgrVM.UpsertChampionFormVMCommand.Execute(championFormVM);
-            NavToAllChampionsCommand.Execute(null);
+            NavToAllChampionsAfterEditingCommand.Execute(false);
         }
 
-        private void NavToAllChampions()
+        private async void NavToAllChampionsAfterEditing(bool didDelete)
         {
-            Navigation.PushAsync(new ChampionsPage());
+            if (Navigation is null) return;
+            if (!didDelete)
+            {
+                await Navigation.PopModalAsync();
+            }
+            await Navigation.PushAsync(new ChampionsPage());
         }
 
-        private void NavBack()
+        private void NavBackToChampionAfterCancelingEdit()
         {
-            Navigation.PopAsync();
+            if (Navigation is null) return;
+            Navigation.PopModalAsync();
         }
     }
 }

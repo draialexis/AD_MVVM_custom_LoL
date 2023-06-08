@@ -8,7 +8,22 @@ namespace ViewModel
 {
     public class ChampionsMgrVM : PropertyChangeNotifier
     {
-        private IDataManager DataManager { get; set; }
+        private IDataManager DataManager
+        {
+            get => dataManager;
+            set
+            {
+                if (dataManager.Equals(value)) return;
+                dataManager = value;
+                (LoadChampionsCommand as Command)?.ChangeCanExecute();
+                (InitializeCommand as Command)?.ChangeCanExecute();
+                (NextPageCommand as Command)?.ChangeCanExecute();
+                (PreviousPageCommand as Command)?.ChangeCanExecute();
+                (UpsertChampionFormVMCommand as Command)?.ChangeCanExecute();
+                (DeleteChampionCommand as Command)?.ChangeCanExecute();
+            }
+        }
+        private IDataManager dataManager;
 
         public ICommand LoadChampionsCommand { get; private set; }
         public ICommand InitializeCommand { get; private set; }
@@ -19,11 +34,11 @@ namespace ViewModel
 
         public ChampionsMgrVM(IDataManager dataManager)
         {
-            DataManager = dataManager;
+            this.dataManager = dataManager;
 
             LoadChampionsCommand = new Command(
                 execute: async () => await LoadChampions(Index, Count),
-                canExecute: () => DataManager is not null && DataManager.ChampionsMgr is not null
+                canExecute: () => MgrIsNotNull()
                 );
 
             InitializeCommand = new Command(
@@ -32,32 +47,37 @@ namespace ViewModel
                     await UpdateTotalItemCount();
                     LoadChampionsCommand.Execute(null);
                 },
-                canExecute: () => DataManager is not null && DataManager.ChampionsMgr is not null
+                canExecute: () => MgrIsNotNull()
                 );
 
             NextPageCommand = new Command(
                 execute: NextPage,
-                canExecute: () => DataManager is not null && DataManager.ChampionsMgr is not null && CanNavigateNext()
+                canExecute: () => MgrIsNotNull() && CanNavigateNext()
                 );
 
             PreviousPageCommand = new Command(
                 execute: PreviousPage,
-                canExecute: () => DataManager is not null && DataManager.ChampionsMgr is not null && CanNavigatePrevious()
+                canExecute: () => MgrIsNotNull() && CanNavigatePrevious()
                 );
 
             UpsertChampionFormVMCommand = new Command<ChampionFormVM>(
                 execute: async (ChampionFormVM championFormVM) => await UpsertChampion(championFormVM),
                 canExecute:
                     (ChampionFormVM championFormVM)
-                        => DataManager is not null && DataManager.ChampionsMgr is not null && championFormVM is not null
+                        => MgrIsNotNull() && championFormVM is not null
                 );
 
             DeleteChampionCommand = new Command<ChampionVM>(
                 execute: async (ChampionVM championVM) => await DeleteChampion(championVM),
-                canExecute: 
-                    (ChampionVM championVM) 
-                        => DataManager is not null && DataManager.ChampionsMgr is not null && championVM is not null
+                canExecute:
+                    (ChampionVM championVM)
+                        => MgrIsNotNull() && championVM is not null
                 );
+        }
+
+        private bool MgrIsNotNull()
+        {
+            return DataManager is not null && DataManager.ChampionsMgr is not null;
         }
 
         public int Index
@@ -123,6 +143,10 @@ namespace ViewModel
         {
             TotalItemCount = await DataManager.ChampionsMgr.GetNbItems();
             OnPropertyChanged(nameof(NbAvailablePages));
+            if (Index > NbAvailablePages)
+            {
+                Index = NbAvailablePages;
+            }
         }
 
         private async Task LoadChampions(int index, int count)
@@ -171,7 +195,7 @@ namespace ViewModel
 
             if (preExistingChampion is null)
             {
-                if(await DataManager.ChampionsMgr.AddItem(championFormVM.ChampionVM.Model) is not null)
+                if (await DataManager.ChampionsMgr.AddItem(championFormVM.ChampionVM.Model) is not null)
                 {
                     await UpdateTotalItemCount();
                 }
@@ -185,10 +209,8 @@ namespace ViewModel
 
         private async Task DeleteChampion(ChampionVM championVM)
         {
-            Debug.WriteLine("I WAS HERE");
-            if (await DataManager.ChampionsMgr.DeleteItem(championVM.Model))
+            if (championVM is not null && await DataManager.ChampionsMgr.DeleteItem(championVM.Model))
             {
-                Debug.WriteLine("HUH?");
                 await UpdateTotalItemCount();
                 LoadChampionsCommand.Execute(null);
             }
@@ -196,7 +218,7 @@ namespace ViewModel
 
         private async Task<Champion?> GetChampionByUniqueName(string name)
         {
-            if (DataManager is null || DataManager.ChampionsMgr is null || string.IsNullOrWhiteSpace(name))
+            if (!MgrIsNotNull() || string.IsNullOrWhiteSpace(name))
             {
                 Debug.WriteLine("DataManager is null || DataManager.ChampionsMgr is null || string.IsNullOrWhiteSpace(name)");
                 return null;
