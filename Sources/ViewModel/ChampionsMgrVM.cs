@@ -1,6 +1,7 @@
 ﻿using Model;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Reflection;
 using System.Windows.Input;
 using VMToolkit;
 
@@ -13,7 +14,7 @@ namespace ViewModel
             get => dataManager;
             set
             {
-                if (dataManager.Equals(value)) return;
+                if (dataManager is not null && dataManager.Equals(value)) return;
                 dataManager = value;
                 (LoadChampionsCommand as Command)?.ChangeCanExecute();
                 (InitializeCommand as Command)?.ChangeCanExecute();
@@ -34,7 +35,7 @@ namespace ViewModel
 
         public ChampionsMgrVM(IDataManager dataManager)
         {
-            this.dataManager = dataManager;
+            DataManager = dataManager ?? throw new ArgumentNullException(nameof(dataManager)); ;
 
             LoadChampionsCommand = new Command(
                 execute: async () => await LoadChampions(Index, Count),
@@ -61,17 +62,13 @@ namespace ViewModel
                 );
 
             UpsertChampionFormVMCommand = new Command<ChampionFormVM>(
-                execute: async (ChampionFormVM championFormVM) => await UpsertChampion(championFormVM),
-                canExecute:
-                    (ChampionFormVM championFormVM)
-                        => MgrIsNotNull() && championFormVM is not null
+                execute: async (championFormVM) => await UpsertChampion(championFormVM),
+                canExecute: championFormVM => MgrIsNotNull() && championFormVM is not null
                 );
 
             DeleteChampionCommand = new Command<ChampionVM>(
-                execute: async (ChampionVM championVM) => await DeleteChampion(championVM),
-                canExecute:
-                    (ChampionVM championVM)
-                        => MgrIsNotNull() && championVM is not null
+                execute: async (championVM) => await DeleteChampion(championVM),
+                canExecute: championVM => MgrIsNotNull() && championVM is not null
                 );
         }
 
@@ -112,7 +109,6 @@ namespace ViewModel
         {
             get => new(championsVM);
         }
-
         private readonly ObservableCollection<ChampionVM> championsVM = new();
 
         public int TotalItemCount

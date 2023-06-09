@@ -215,17 +215,22 @@ namespace ViewModel
             UpdateSkillsVM();
         }
 
-        public void AddSkill(string name, string type, string? description)
+        public void AddSkill(Tuple<string, string, string?> tuple)
         {
-            if (string.IsNullOrWhiteSpace(type) || string.IsNullOrWhiteSpace(name))
-            {
-                throw new ArgumentException("skill type or name was null or empty");
-            }
+            string name = tuple.Item1;
+            string type = tuple.Item2;
+            string? description = tuple.Item3;
 
-            if (Enum.TryParse(type, out SkillType typeAsEnum))
-            {
-                AddSkill(new Skill(name, typeAsEnum, description ?? ""));
-            }
+                if (string.IsNullOrWhiteSpace(type) || string.IsNullOrWhiteSpace(name))
+                {
+                    throw new ArgumentException("skill type or name was null or empty");
+                }
+
+                if (Enum.TryParse(type, out SkillType typeAsEnum))
+                {
+                    AddSkill(new Skill(name, typeAsEnum, description ?? ""));
+                }
+            
         }
 
         public void RemoveSkill(SkillVM skillVM)

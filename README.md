@@ -22,6 +22,19 @@ Faites ce que vous pouvez avec, dans l'ordre :
 - [x] Ajoutez la gestion des skills.
 - [ ] ~~Ajoutez la gestion des skins.~~
 
+## Peculiarities
+
+### Delete from detail page
+The instructions did not mention adding a `Delete` button in detail pages, but it was useful when testing the app directly on Windows -- i.e. with no touch functionality or swipe gestures.
+
+### Navigating to detail page
+Users can click / tap a champion's `Icon` to navigate to their detail page. The entire list item is not clickable -- it makes navigating to a champion's detail page a little harder, but it allows us to implement swiping on said list item, in order to reveal `Update`and `Delete` buttons.
+
+Before we made this compromise, swiping was conflicting with tapping, and it was quite difficult to access those buttons.
+
+### Auto-focus
+Upon updating a skill or a characteristic, Android seems to auto-focus the element closest to the top of the visible `Scrollview`. That includes opening the user's keyboard or numpad...
+
 ## Screenshots
 The app is not meant to be pretty, but the hope is that it is usable, and that the navigation experience is pleasant. At the time of this writing, it looks like this:  
 <img src="./Documentation/home.png" width=200 height=450/>
@@ -35,106 +48,105 @@ The app is not meant to be pretty, but the hope is that it is usable, and that t
 
 ## Class diagrams: M, V, VM... AppVM
 
+We're applying the MVVM architecture pattern in **both** common senses of the term: 
+* an app-dependent VM takes care of navigation through commands, 
+* and a model-dependent VM provides properties for binding, sends notifications when its properties change, and wraps the model.
+
 ```mermaid
 classDiagram
 
-class  V_MainAppVM  {
+class View
+class View__AppVM
+class ViewModel 
+class Model
+class VMToolkit
 
-+INavigation Navigation
+View ..> View__AppVM
+View__AppVM ..> ViewModel
+View ..> ViewModel
+ViewModel ..> Model
+ViewModel ..> VMToolkit
 
-+ICommand NavToSelectChampionCommand
+```
 
-+ICommand NavToAddChampionCommand
+Here is what our classes look like
 
-+ICommand NavToUpdateChampionCommand
 
-+ICommand NavToAllChampionsAfterDeletingCommand
+```mermaid
+classDiagram
 
-+ICommand NavToAllChampionsAfterUpsertingCommand
-
+class MainAppVM {
+    +INavigation Navigation
+    +ICommand NavToSelectChampionCommand
+    +ICommand NavToAddChampionCommand
+    +ICommand NavToUpdateChampionCommand
+    +ICommand NavToAllChampionsAfterDeletingCommand
+    +ICommand NavToAllChampionsAfterUpsertingCommand
 }
 
-class  VM_ChampionsMgrVM  {
-
-+ObservableCollection<ChampionVM> ChampionsVM
-
-+ICommand LoadChampionsCommand
-
-+ICommand InitializeCommand
-
-+ICommand NextPageCommand
-
-+ICommand PreviousPageCommand
-
-+ICommand UpsertChampionFormVMCommand
-
-+ICommand DeleteChampionCommand
-
+class ChampionsMgrVM {
+    +ICommand LoadChampionsCommand
+    +ICommand InitializeCommand
+    +ICommand NextPageCommand
+    +ICommand PreviousPageCommand
+    +ICommand UpsertChampionFormVMCommand
+    +ICommand DeleteChampionCommand
 }
 
-class  VM_ChampionVM  {
-
-+ChampionVM(clone:  ChampionVM)
-
+class ChampionVM {
+    +ChampionVM(clone: ChampionVM)
 }
 
-class  VM_ChampionFormVM  {
-
-+ICommand AddCharacteristicCommand
-
-+ICommand UpdateCharacteristicCommand
-
-+ICommand DeleteCharacteristicCommand
-
-+ICommand UpsertIconCommand
-
-+ICommand UpsertImageCommand
-
-+ICommand AddSkillCommand
-
-+ICommand UpdateSkillCommand
-
-+ICommand DeleteSkillCommand
-
+class ChampionFormVM {
+    +ICommand AddCharacteristicCommand
+    +ICommand UpdateCharacteristicCommand
+    +ICommand DeleteCharacteristicCommand
+    +ICommand UpsertIconCommand
+    +ICommand UpsertImageCommand
+    +ICommand AddSkillCommand
+    +ICommand UpdateSkillCommand
+    +ICommand DeleteSkillCommand
+    +ReadOnlyCollection AllClasses
+    +ReadOnlyCollection AllSkillTypes
 }
 
-  
+class INotifyPropertyChanged {
+    <<interface>>
+    +PropertyChangedEventHandler
+    +OnPropertyChanged(propertyName: string)
+}
 
-V_ChampionPage  -->  V_MainAppVM
+class ChampionClass {
+    <<enumeration>>
+}
 
-V_ChampionPage  -->  VM_ChampionVM
+class SkillType {
+    <<enumeration>>
+}
 
-V_ChampionFormPage  -->  V_MainAppVM
+ChampionPage --> MainAppVM
+ChampionPage --> ChampionVM
+ChampionFormPage --> MainAppVM
+ChampionFormPage --> ChampionFormVM
+ChampionsPage --> MainAppVM
+MainAppVM --> ChampionsMgrVM
 
-V_ChampionFormPage  -->  VM_ChampionFormVM
+ChampionsMgrVM --|> PropertyChangeNotifier
+ChampionsMgrVM --> "*" ChampionVM
+ChampionsMgrVM --> IDataManager
+ChampionVM --|> PropertyChangeNotifier
+ChampionVM --> "*" SkillVM
+ChampionVM --> Champion
+SkillVM --|> PropertyChangeNotifier
+SkillVM --> Skill
+ChampionFormVM --> ChampionVM
+ChampionFormVM --> "*" SkillType
+ChampionFormVM --> "*" ChampionClass
 
-V_ChampionsPage  -->  V_MainAppVM
+PropertyChangeNotifier ..|> INotifyPropertyChanged
 
-V_MainAppVM  -->  VM_ChampionsMgrVM
-
-  
-
-VM_ChampionsMgrVM  --|>  VMToolkit_PropertyChangeNotifier
-
-VM_ChampionsMgrVM  -->  VM_ChampionVM  :  *
-
-VM_ChampionsMgrVM  -->  M_IDataManager
-
-VM_ChampionVM  --|>  VMToolkit_PropertyChangeNotifier
-
-VM_ChampionVM  -->  VM_SkillVM  :  *
-
-VM_ChampionVM  -->  M_Champion
-
-VM_SkillVM  --|>  VMToolkit_PropertyChangeNotifier
-
-VM_SkillVM  -->  M_Skill
-
-VM_ChampionFormVM  -->  VM_ChampionVM
-
-  
-
-M_IDataManager  -->  M_Champion  :  *
-
-M_Champion  -->  M_Skill  :  *
+IDataManager --> "*" Champion
+Champion --> "*" Skill
+Skill --> SkillType
+Champion --> ChampionClass
 ```
