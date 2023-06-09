@@ -117,6 +117,11 @@ namespace ViewModel
             set
             {
                 if (totalItemCount == value) return;
+                if (totalItemCount == 0 && value == 1)
+                {
+                    Index = 1;
+                    OnPropertyChanged(nameof(Index));
+                }
                 totalItemCount = value;
                 OnPropertyChanged();
                 (NextPageCommand as Command)?.ChangeCanExecute();
