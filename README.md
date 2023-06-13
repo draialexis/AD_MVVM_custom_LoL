@@ -1,5 +1,14 @@
 
 # MVVM_LoL_master_detail
+
+* [Instructions (FR)](#instructions-fr)
+* [Peculiarities](#peculiarities)
+    - [Delete from detail page](#delete-from-detail-page)  
+    - [Navigating to detail page](#navigating-to-detail-page)  
+    - [Auto-focus](#auto-focus)  
+* [Screenshots](#screenshots)
+* [Class diagrams: M, V, VM... AppVM](#class-diagrams-m-v-vm-appvm)
+
   
 ## Instructions (FR)
 
