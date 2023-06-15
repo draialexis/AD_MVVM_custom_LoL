@@ -79,7 +79,7 @@ namespace ViewModel
                 );
 
             AddSkillCommand = new Command<Tuple<string, string, string?>>(
-                execute: AddSkill,
+                execute: tuple => AddSkill(tuple.Item1, tuple.Item2, tuple.Item3),
                 canExecute: tuple =>
                     ChampionVM is not null &&
                     tuple is not null &&
@@ -124,10 +124,11 @@ namespace ViewModel
             ChampionVM.Image = Convert.ToBase64String(imageBytes);
         }
 
-        private void AddSkill(Tuple<string, string, string?> tuple)
+        private void AddSkill(string name, string type, string? description)
         {
-            ChampionVM.AddSkill(tuple);
+            ChampionVM.AddSkill(name, type, description);
         }
+
 
         private void UpdateSkill(SkillVM skill)
         {

@@ -27,16 +27,25 @@ namespace ViewModel
 
         public ChampionVM(Champion model)
         {
-            Model = model ?? throw new ArgumentNullException(nameof(model));
-            UpdateCharacteristicsVM();
+            if (model is null)
+            {
+                throw new ArgumentNullException(nameof(model));
+            }
+
+            Model = model;
             UpdateSkillsVM();
+            UpdateCharacteristicsVM();
         }
 
         /// <summary>
         /// Clone constructor
         /// </summary>
         /// <param name="championVM"></param>
-        public ChampionVM(ChampionVM championVM)
+        public ChampionVM(ChampionVM championVM) : this(CloneModel(championVM))
+        {
+        }
+
+        private static Champion CloneModel(ChampionVM championVM)
         {
             if (championVM is null || championVM.Model is null)
             {
@@ -50,18 +59,19 @@ namespace ViewModel
                 Image = championVM.Model.Image,
                 Bio = championVM.Model.Bio,
             };
-            Model = modelClone;
+
             foreach (var characteristic in championVM.Model.Characteristics)
             {
-                Model.AddCharacteristics(new Tuple<string, int>(characteristic.Key, characteristic.Value));
+                modelClone.AddCharacteristics(new Tuple<string, int>(characteristic.Key, characteristic.Value));
             }
             foreach (var skill in championVM.Model.Skills)
             {
-                Model.AddSkill(new Skill(skill.Name, skill.Type, skill.Description));
+                modelClone.AddSkill(new Skill(skill.Name, skill.Type, skill.Description));
             }
-            UpdateSkillsVM();
-            UpdateCharacteristicsVM();
+
+            return modelClone;
         }
+
         public string Name
         {
             get => Model.Name;
@@ -215,22 +225,19 @@ namespace ViewModel
             UpdateSkillsVM();
         }
 
-        public void AddSkill(Tuple<string, string, string?> tuple)
+        public void AddSkill(string name, string type, string? description)
         {
-            string name = tuple.Item1;
-            string type = tuple.Item2;
-            string? description = tuple.Item3;
 
-                if (string.IsNullOrWhiteSpace(type) || string.IsNullOrWhiteSpace(name))
-                {
-                    throw new ArgumentException("skill type or name was null or empty");
-                }
+            if (string.IsNullOrWhiteSpace(type) || string.IsNullOrWhiteSpace(name))
+            {
+                throw new ArgumentException("skill type or name was null or empty");
+            }
 
-                if (Enum.TryParse(type, out SkillType typeAsEnum))
-                {
-                    AddSkill(new Skill(name, typeAsEnum, description ?? ""));
-                }
-            
+            if (Enum.TryParse(type, out SkillType typeAsEnum))
+            {
+                AddSkill(new Skill(name, typeAsEnum, description ?? ""));
+            }
+
         }
 
         public void RemoveSkill(SkillVM skillVM)
