@@ -24,8 +24,8 @@ namespace View.AppVM
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
         {
             NavToSelectChampionCommand = new Command<ChampionVM>(
-                execute: async (ChampionVM selectedChampion) => await NavToSelectChampion(selectedChampion),
-                canExecute: (ChampionVM selectedChampion) => ChampionsMgrVM is not null && selectedChampion is not null
+                execute: async (selectedChampion) => await NavToSelectChampion(selectedChampion),
+                canExecute: selectedChampion => ChampionsMgrVM is not null && selectedChampion is not null
                 );
 
             NavToAddChampionCommand = new Command(
@@ -34,18 +34,18 @@ namespace View.AppVM
                 );
 
             NavToUpdateChampionCommand = new Command<ChampionVM>(
-                execute: async (ChampionVM championToUpdate) => await NavToUpdateChampion(championToUpdate),
-                canExecute: (ChampionVM championToUpdate) => ChampionsMgrVM is not null && championToUpdate is not null
+                execute: async (championToUpdate) => await NavToUpdateChampion(championToUpdate),
+                canExecute: championToUpdate => ChampionsMgrVM is not null && championToUpdate is not null
                 );
 
             NavToAllChampionsAfterDeletingCommand = new Command<ChampionVM>(
                 execute: NavToAllChampionsAfterDeleting,
-                canExecute: (ChampionVM championVM) => ChampionsMgrVM is not null
+                canExecute: championVM => ChampionsMgrVM is not null
                 );
 
             NavToAllChampionsAfterUpsertingCommand = new Command<ChampionFormVM>(
                 execute: NavToAllChampionsAfterUpserting,
-                canExecute: (ChampionFormVM championFormVM) => ChampionsMgrVM is not null && championFormVM is not null
+                canExecute: championFormVM => ChampionsMgrVM is not null && championFormVM is not null
                 );
 
             NavToAllChampionsAfterEditingCommand = new Command<bool>(NavToAllChampionsAfterEditing);
@@ -91,12 +91,9 @@ namespace View.AppVM
 
         private async void NavToAllChampionsAfterEditing(bool didDelete)
         {
-            if (Navigation is null) return;
-            if (!didDelete)
-            {
-                await Navigation.PopModalAsync();
-            }
-            await Navigation.PushAsync(new ChampionsPage());
+            // https://learn.microsoft.com/en-us/dotnet/maui/fundamentals/shell/navigation#relative-routes
+            // navigate to ChampionsPage and start a new navigation stack from scratch
+            await Shell.Current.GoToAsync("//ChampionsPage");
         }
 
         private void NavBackToChampionAfterCancelingEdit()

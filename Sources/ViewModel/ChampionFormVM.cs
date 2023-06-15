@@ -11,7 +11,7 @@ namespace ViewModel
             get => championVM;
             private set
             {
-                if (championVM.Equals(value)) return;
+                if (championVM is not null && championVM.Equals(value)) return;
                 championVM = value;
                 (AddCharacteristicCommand as Command)?.ChangeCanExecute();
                 (UpdateCharacteristicCommand as Command)?.ChangeCanExecute();
@@ -42,44 +42,44 @@ namespace ViewModel
                 {
                     throw new ArgumentNullException(nameof(championName));
                 }
-                this.championVM = new ChampionVM(new Champion(championName)) { Class = ChampionClass.Unknown.ToString() };
+                ChampionVM = new ChampionVM(new Champion(championName)) { Class = ChampionClass.Unknown.ToString() };
             }
             else
             {
                 // Getting a clone, to be able to make users actively save their changes
-                this.championVM = new ChampionVM(championVM);
+                ChampionVM = new ChampionVM(championVM);
             }
 
             AddCharacteristicCommand = new Command<Tuple<string, int>>(
                 execute: AddCharacteristic,
-                canExecute: (Tuple<string, int> tuple) =>
+                canExecute: tuple =>
                     ChampionVM is not null && tuple is not null && !string.IsNullOrWhiteSpace(tuple.Item1) && tuple.Item2 >= 0
                 );
 
             UpdateCharacteristicCommand = new Command<CharacteristicVM>(
                 execute: UpdateCharacteristic,
-                canExecute: (CharacteristicVM characteristic) =>
-                ChampionVM is not null && characteristic is not null && !string.IsNullOrWhiteSpace(characteristic.Key)
+                canExecute: characteristic =>
+                    ChampionVM is not null && characteristic is not null && !string.IsNullOrWhiteSpace(characteristic.Key)
                 );
 
             DeleteCharacteristicCommand = new Command<CharacteristicVM>(
                 execute: DeleteCharacteristic,
-                canExecute: (CharacteristicVM characteristic) =>
-                ChampionVM is not null && characteristic is not null && !string.IsNullOrWhiteSpace(characteristic.Key)
+                canExecute: characteristic =>
+                    ChampionVM is not null && characteristic is not null && !string.IsNullOrWhiteSpace(characteristic.Key)
                 );
 
             UpsertIconCommand = new Command<byte[]>(
                 execute: UpsertIcon,
-                canExecute: (byte[] imageBytes) => ChampionVM is not null && imageBytes.Any()
+                canExecute: imageBytes => ChampionVM is not null && imageBytes.Any()
                 );
 
             UpsertImageCommand = new Command<byte[]>(
                 execute: UpsertImage,
-                canExecute: (byte[] imageBytes) => ChampionVM is not null && imageBytes.Any()
+                canExecute: imageBytes => ChampionVM is not null && imageBytes.Any()
                 );
 
-            AddSkillCommand = new Command<Tuple<string, string, string>>(
-                execute: tuple => AddSkill(tuple.Item1, tuple.Item2, tuple.Item3),
+            AddSkillCommand = new Command<Tuple<string, string, string?>>(
+                execute: AddSkill,
                 canExecute: tuple =>
                     ChampionVM is not null &&
                     tuple is not null &&
@@ -89,16 +89,13 @@ namespace ViewModel
 
             UpdateSkillCommand = new Command<SkillVM>(
                 execute: UpdateSkill,
-                canExecute:
-                    (SkillVM skill) =>
-                        ChampionVM is not null && skill is not null && !string.IsNullOrWhiteSpace(skill.Type) && !string.IsNullOrWhiteSpace(skill.Description)
+                canExecute: skill =>
+                    ChampionVM is not null && skill is not null && !string.IsNullOrWhiteSpace(skill.Type) && !string.IsNullOrWhiteSpace(skill.Description)
                 );
 
             DeleteSkillCommand = new Command<SkillVM>(
                 execute: DeleteSkill,
-                canExecute:
-                    (SkillVM skill) =>
-                        ChampionVM is not null && skill is not null
+                    canExecute: skill => ChampionVM is not null && skill is not null
                 );
         }
 
@@ -127,9 +124,9 @@ namespace ViewModel
             ChampionVM.Image = Convert.ToBase64String(imageBytes);
         }
 
-        private void AddSkill(string name, string type, string? description)
+        private void AddSkill(Tuple<string, string, string?> tuple)
         {
-            ChampionVM.AddSkill(name, type, description);
+            ChampionVM.AddSkill(tuple);
         }
 
         private void UpdateSkill(SkillVM skill)
