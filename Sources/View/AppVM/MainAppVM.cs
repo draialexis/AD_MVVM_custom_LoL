@@ -1,63 +1,34 @@
-﻿using System.Windows.Input;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using View.Views;
 using ViewModel;
 
 namespace View.AppVM
 {
-    public class MainAppVM
+    public partial class MainAppVM : ObservableObject
     {
         public INavigation Navigation { get; set; }
 
         public ChampionsMgrVM ChampionsMgrVM => (Application.Current as App)!.ChampionsMgrVM;
 
-        public ICommand NavToSelectChampionCommand { get; private set; }
-        public ICommand NavToAddChampionCommand { get; private set; }
-        public ICommand NavToUpdateChampionCommand { get; private set; }
-        public ICommand NavToAllChampionsAfterDeletingCommand { get; private set; }
-        public ICommand NavToAllChampionsAfterUpsertingCommand { get; private set; }
-        public ICommand NavToAllChampionsAfterEditingCommand { get; private set; }
-        public ICommand NavBackToChampionAfterCancelingEditCommand { get; private set; }
-
         // Navigation is initialized in ChampionsPage.xaml.cs, which is the entrypoint for the Champions tab
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-        public MainAppVM()
+        public MainAppVM() { }
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-        {
-            NavToSelectChampionCommand = new Command<ChampionVM>(
-                execute: async (selectedChampion) => await NavToSelectChampion(selectedChampion),
-                canExecute: selectedChampion => ChampionsMgrVM is not null && selectedChampion is not null
-                );
 
-            NavToAddChampionCommand = new Command(
-                execute: async () => await NavToAddChampion(),
-                canExecute: () => ChampionsMgrVM is not null
-                );
-
-            NavToUpdateChampionCommand = new Command<ChampionVM>(
-                execute: async (championToUpdate) => await NavToUpdateChampion(championToUpdate),
-                canExecute: championToUpdate => ChampionsMgrVM is not null && championToUpdate is not null
-                );
-
-            NavToAllChampionsAfterDeletingCommand = new Command<ChampionVM>(
-                execute: NavToAllChampionsAfterDeleting,
-                canExecute: championVM => ChampionsMgrVM is not null
-                );
-
-            NavToAllChampionsAfterUpsertingCommand = new Command<ChampionFormVM>(
-                execute: NavToAllChampionsAfterUpserting,
-                canExecute: championFormVM => ChampionsMgrVM is not null && championFormVM is not null
-                );
-
-            NavToAllChampionsAfterEditingCommand = new Command<bool>(NavToAllChampionsAfterEditing);
-
-            NavBackToChampionAfterCancelingEditCommand = new Command(NavBackToChampionAfterCancelingEdit);
-        }
-
+        [RelayCommand(CanExecute = nameof(CanFindChampion))]
         private async Task NavToSelectChampion(ChampionVM selectedChampion)
         {
             if (Navigation is null) return;
             await Navigation.PushAsync(new ChampionPage(selectedChampion, this));
         }
+
+        private bool CanFindChampion(ChampionVM champion)
+        {
+            return CanFindChampionMgr() && champion is not null;
+        }
+
+        [RelayCommand(CanExecute = nameof(CanFindChampionMgr))]
 
         private async Task NavToAddChampion()
         {
@@ -71,31 +42,46 @@ namespace View.AppVM
             await Navigation.PushModalAsync(new ChampionFormPage(new(null, result), this));
         }
 
+        private bool CanFindChampionMgr()
+        {
+            return ChampionsMgrVM is not null;
+        }
+
+        [RelayCommand(CanExecute = nameof(CanFindChampion))]
         private async Task NavToUpdateChampion(ChampionVM championToUpdate)
         {
             if (Navigation is null) return;
             await Navigation.PushModalAsync(new ChampionFormPage(new(championToUpdate), this));
         }
 
+        [RelayCommand(CanExecute = nameof(CanFindChampionMgr))]
         private void NavToAllChampionsAfterDeleting(ChampionVM championVM)
         {
             ChampionsMgrVM.DeleteChampionCommand.Execute(championVM);
             NavToAllChampionsAfterEditingCommand.Execute(true);
         }
 
+        [RelayCommand(CanExecute = nameof(CanUpsertChampion))]
         private void NavToAllChampionsAfterUpserting(ChampionFormVM championFormVM)
         {
             ChampionsMgrVM.UpsertChampionFormVMCommand.Execute(championFormVM);
             NavToAllChampionsAfterEditingCommand.Execute(false);
         }
 
-        private async void NavToAllChampionsAfterEditing(bool didDelete)
+        private bool CanUpsertChampion(ChampionFormVM championFormVM)
+        {
+            return CanFindChampionMgr() && championFormVM is not null;
+        }
+
+        [RelayCommand]
+        private async Task NavToAllChampionsAfterEditing(bool didDelete)
         {
             // https://learn.microsoft.com/en-us/dotnet/maui/fundamentals/shell/navigation#relative-routes
             // navigate to ChampionsPage and start a new navigation stack from scratch
             await Shell.Current.GoToAsync("//ChampionsPage");
         }
 
+        [RelayCommand]
         private void NavBackToChampionAfterCancelingEdit()
         {
             if (Navigation is null) return;

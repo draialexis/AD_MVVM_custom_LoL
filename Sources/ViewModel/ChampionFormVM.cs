@@ -1,38 +1,22 @@
-﻿using Model;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using Model;
 using System.Collections.ObjectModel;
-using System.Windows.Input;
 
 namespace ViewModel
 {
-    public class ChampionFormVM
+    public partial class ChampionFormVM : ObservableObject
     {
-        public ChampionVM ChampionVM
-        {
-            get => championVM;
-            private set
-            {
-                if (championVM is not null && championVM.Equals(value)) return;
-                championVM = value;
-                (AddCharacteristicCommand as Command)?.ChangeCanExecute();
-                (UpdateCharacteristicCommand as Command)?.ChangeCanExecute();
-                (DeleteCharacteristicCommand as Command)?.ChangeCanExecute();
-                (UpsertIconCommand as Command)?.ChangeCanExecute();
-                (UpsertImageCommand as Command)?.ChangeCanExecute();
-                (AddSkillCommand as Command)?.ChangeCanExecute();
-                (UpdateSkillCommand as Command)?.ChangeCanExecute();
-                (DeleteSkillCommand as Command)?.ChangeCanExecute();
-            }
-        }
+        [ObservableProperty]
+        [NotifyCanExecuteChangedFor(nameof(AddCharacteristicCommand))]
+        [NotifyCanExecuteChangedFor(nameof(UpdateCharacteristicCommand))]
+        [NotifyCanExecuteChangedFor(nameof(DeleteCharacteristicCommand))]
+        [NotifyCanExecuteChangedFor(nameof(UpsertIconCommand))]
+        [NotifyCanExecuteChangedFor(nameof(UpsertImageCommand))]
+        [NotifyCanExecuteChangedFor(nameof(AddSkillCommand))]
+        [NotifyCanExecuteChangedFor(nameof(UpdateSkillCommand))]
+        [NotifyCanExecuteChangedFor(nameof(DeleteSkillCommand))]
         private ChampionVM championVM;
-
-        public ICommand AddCharacteristicCommand { get; private set; }
-        public ICommand UpdateCharacteristicCommand { get; private set; }
-        public ICommand DeleteCharacteristicCommand { get; private set; }
-        public ICommand UpsertIconCommand { get; private set; }
-        public ICommand UpsertImageCommand { get; private set; }
-        public ICommand AddSkillCommand { get; private set; }
-        public ICommand UpdateSkillCommand { get; private set; }
-        public ICommand DeleteSkillCommand { get; private set; }
 
         public ChampionFormVM(ChampionVM? championVM, string? championName = null)
         {
@@ -49,95 +33,95 @@ namespace ViewModel
                 // Getting a clone, to be able to make users actively save their changes
                 ChampionVM = new ChampionVM(championVM);
             }
-
-            AddCharacteristicCommand = new Command<Tuple<string, int>>(
-                execute: AddCharacteristic,
-                canExecute: tuple =>
-                    ChampionVM is not null && tuple is not null && !string.IsNullOrWhiteSpace(tuple.Item1) && tuple.Item2 >= 0
-                );
-
-            UpdateCharacteristicCommand = new Command<CharacteristicVM>(
-                execute: UpdateCharacteristic,
-                canExecute: characteristic =>
-                    ChampionVM is not null && characteristic is not null && !string.IsNullOrWhiteSpace(characteristic.Key)
-                );
-
-            DeleteCharacteristicCommand = new Command<CharacteristicVM>(
-                execute: DeleteCharacteristic,
-                canExecute: characteristic =>
-                    ChampionVM is not null && characteristic is not null && !string.IsNullOrWhiteSpace(characteristic.Key)
-                );
-
-            UpsertIconCommand = new Command<byte[]>(
-                execute: UpsertIcon,
-                canExecute: imageBytes => ChampionVM is not null && imageBytes.Any()
-                );
-
-            UpsertImageCommand = new Command<byte[]>(
-                execute: UpsertImage,
-                canExecute: imageBytes => ChampionVM is not null && imageBytes.Any()
-                );
-
-            AddSkillCommand = new Command<Tuple<string, string, string?>>(
-                execute: tuple => AddSkill(tuple.Item1, tuple.Item2, tuple.Item3),
-                canExecute: tuple =>
-                    ChampionVM is not null &&
-                    tuple is not null &&
-                    !string.IsNullOrWhiteSpace(tuple.Item1) &&
-                    !string.IsNullOrWhiteSpace(tuple.Item2)
-                );
-
-            UpdateSkillCommand = new Command<SkillVM>(
-                execute: UpdateSkill,
-                canExecute: skill =>
-                    ChampionVM is not null && skill is not null && !string.IsNullOrWhiteSpace(skill.Type) && !string.IsNullOrWhiteSpace(skill.Description)
-                );
-
-            DeleteSkillCommand = new Command<SkillVM>(
-                execute: DeleteSkill,
-                    canExecute: skill => ChampionVM is not null && skill is not null
-                );
         }
 
+        [RelayCommand(CanExecute = nameof(CanAddCharacteristic))]
         private void AddCharacteristic(Tuple<string, int> tuple)
         {
             ChampionVM.AddCharacteristic(tuple);
         }
 
+        private bool CanAddCharacteristic(Tuple<string, int> tuple)
+        {
+            return ChampionVM is not null
+                && tuple is not null
+                && !string.IsNullOrWhiteSpace(tuple.Item1)
+                && tuple.Item2 >= 0;
+        }
+
+        [RelayCommand(CanExecute = nameof(CanFindCharacteristicInChampion))]
         private void UpdateCharacteristic(CharacteristicVM characteristic)
         {
             ChampionVM.UpdateCharacteristic(characteristic);
         }
 
+        [RelayCommand(CanExecute = nameof(CanFindCharacteristicInChampion))]
         private void DeleteCharacteristic(CharacteristicVM characteristic)
         {
             ChampionVM.RemoveCharacteristic(characteristic);
         }
 
+        [RelayCommand(CanExecute = nameof(CanInsertImageBytes))]
         private void UpsertIcon(byte[] imageBytes)
         {
             ChampionVM.Icon = Convert.ToBase64String(imageBytes);
         }
 
+        [RelayCommand(CanExecute = nameof(CanInsertImageBytes))]
         private void UpsertImage(byte[] imageBytes)
         {
             ChampionVM.Image = Convert.ToBase64String(imageBytes);
         }
 
-        private void AddSkill(string name, string type, string? description)
+        [RelayCommand(CanExecute = nameof(CanAddSkill))]
+        private void AddSkill(Tuple<string, string, string?> tuple)
         {
-            ChampionVM.AddSkill(name, type, description);
+            ChampionVM.AddSkill(tuple.Item1, tuple.Item2, tuple.Item3);
         }
 
+        private bool CanAddSkill(Tuple<string, string, string?> tuple)
+        {
+            return ChampionVM is not null
+                && tuple is not null
+                && !string.IsNullOrWhiteSpace(tuple.Item1)
+                && !string.IsNullOrWhiteSpace(tuple.Item2);
+        }
 
+        [RelayCommand(CanExecute = nameof(CanUpdateSkill))]
         private void UpdateSkill(SkillVM skill)
         {
             ChampionVM.UpdateSkill(skill);
         }
 
+        private bool CanUpdateSkill(SkillVM skill)
+        {
+            return ChampionVM is not null
+                && skill is not null
+                && !string.IsNullOrWhiteSpace(skill.Type)
+                && !string.IsNullOrWhiteSpace(skill.Description);
+        }
+
+        [RelayCommand(CanExecute = nameof(CanDeleteSkill))]
         private void DeleteSkill(SkillVM skill)
         {
             ChampionVM.RemoveSkill(skill);
+        }
+
+        private bool CanDeleteSkill(SkillVM skill)
+        {
+            return ChampionVM is not null && skill is not null;
+        }
+
+        private bool CanFindCharacteristicInChampion(CharacteristicVM characteristic)
+        {
+            return ChampionVM is not null
+                && characteristic is not null
+                && !string.IsNullOrWhiteSpace(characteristic.Key);
+        }
+
+        private bool CanInsertImageBytes(byte[] imageBytes)
+        {
+            return ChampionVM is not null && imageBytes.Any();
         }
 
         public ReadOnlyCollection<string> AllClasses => allClasses;

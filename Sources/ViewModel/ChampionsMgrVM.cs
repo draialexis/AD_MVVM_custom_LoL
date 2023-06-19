@@ -1,75 +1,26 @@
-﻿using Model;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using Model;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
-using System.Reflection;
-using System.Windows.Input;
-using VMToolkit;
 
 namespace ViewModel
 {
-    public class ChampionsMgrVM : PropertyChangeNotifier
+    public partial class ChampionsMgrVM : ObservableObject
     {
-        private IDataManager DataManager
-        {
-            get => dataManager;
-            set
-            {
-                if (dataManager is not null && dataManager.Equals(value)) return;
-                dataManager = value;
-                (LoadChampionsCommand as Command)?.ChangeCanExecute();
-                (InitializeCommand as Command)?.ChangeCanExecute();
-                (NextPageCommand as Command)?.ChangeCanExecute();
-                (PreviousPageCommand as Command)?.ChangeCanExecute();
-                (UpsertChampionFormVMCommand as Command)?.ChangeCanExecute();
-                (DeleteChampionCommand as Command)?.ChangeCanExecute();
-            }
-        }
+        [ObservableProperty]
+        [NotifyCanExecuteChangedFor(nameof(LoadChampionsCommand))]
+        [NotifyCanExecuteChangedFor(nameof(InitializeCommand))]
+        [NotifyCanExecuteChangedFor(nameof(NextPageCommand))]
+        [NotifyCanExecuteChangedFor(nameof(PreviousPageCommand))]
+        [NotifyCanExecuteChangedFor(nameof(UpsertChampionFormVMCommand))]
+        [NotifyCanExecuteChangedFor(nameof(DeleteChampionCommand))]
         private IDataManager dataManager;
 
-        public ICommand LoadChampionsCommand { get; private set; }
-        public ICommand InitializeCommand { get; private set; }
-        public ICommand NextPageCommand { get; private set; }
-        public ICommand PreviousPageCommand { get; private set; }
-        public ICommand UpsertChampionFormVMCommand { get; private set; }
-        public ICommand DeleteChampionCommand { get; private set; }
 
         public ChampionsMgrVM(IDataManager dataManager)
         {
-            DataManager = dataManager ?? throw new ArgumentNullException(nameof(dataManager)); ;
-
-            LoadChampionsCommand = new Command(
-                execute: async () => await LoadChampions(Index, Count),
-                canExecute: () => MgrIsNotNull()
-                );
-
-            InitializeCommand = new Command(
-                execute: async () =>
-                {
-                    await UpdateTotalItemCount();
-                    LoadChampionsCommand.Execute(null);
-                },
-                canExecute: () => MgrIsNotNull()
-                );
-
-            NextPageCommand = new Command(
-                execute: NextPage,
-                canExecute: () => MgrIsNotNull() && CanNavigateNext()
-                );
-
-            PreviousPageCommand = new Command(
-                execute: PreviousPage,
-                canExecute: () => MgrIsNotNull() && CanNavigatePrevious()
-                );
-
-            UpsertChampionFormVMCommand = new Command<ChampionFormVM>(
-                execute: async (championFormVM) => await UpsertChampion(championFormVM),
-                canExecute: championFormVM => MgrIsNotNull() && championFormVM is not null
-                );
-
-            DeleteChampionCommand = new Command<ChampionVM>(
-                execute: async (championVM) => await DeleteChampion(championVM),
-                canExecute: championVM => MgrIsNotNull() && championVM is not null
-                );
+            DataManager = dataManager ?? throw new ArgumentNullException(nameof(dataManager));
         }
 
         private bool MgrIsNotNull()
@@ -77,32 +28,14 @@ namespace ViewModel
             return DataManager is not null && DataManager.ChampionsMgr is not null;
         }
 
-        public int Index
-        {
-            get => index;
-            set
-            {
-                if (index == value) return;
-                index = value;
-                OnPropertyChanged();
-                (NextPageCommand as Command)?.ChangeCanExecute();
-                (PreviousPageCommand as Command)?.ChangeCanExecute();
-            }
-
-        }
+        [ObservableProperty]
+        [NotifyCanExecuteChangedFor(nameof(NextPageCommand))]
+        [NotifyCanExecuteChangedFor(nameof(PreviousPageCommand))]
         private int index = 1;
-        public int Count
-        {
-            get => count;
-            set
-            {
-                if (count == value) return;
-                count = value;
-                OnPropertyChanged();
-                (NextPageCommand as Command)?.ChangeCanExecute();
-                (PreviousPageCommand as Command)?.ChangeCanExecute();
-            }
-        }
+
+        [ObservableProperty]
+        [NotifyCanExecuteChangedFor(nameof(NextPageCommand))]
+        [NotifyCanExecuteChangedFor(nameof(PreviousPageCommand))]
         private int count = 5;
 
         public ReadOnlyObservableCollection<ChampionVM> ChampionsVM
@@ -140,6 +73,14 @@ namespace ViewModel
             }
         }
 
+        [RelayCommand(CanExecute = nameof(MgrIsNotNull))]
+        private async Task Initialize()
+        {
+            await UpdateTotalItemCount();
+            LoadChampionsCommand.Execute(null);
+        }
+
+        [RelayCommand(CanExecute = nameof(MgrIsNotNull))]
         private async Task UpdateTotalItemCount()
         {
             TotalItemCount = await DataManager.ChampionsMgr.GetNbItems();
@@ -150,14 +91,15 @@ namespace ViewModel
             }
         }
 
-        private async Task LoadChampions(int index, int count)
+        [RelayCommand(CanExecute = nameof(MgrIsNotNull))]
+        private async Task LoadChampions()
         {
             championsVM.Clear();
 
             // model's collection is 0-indexed but this VM is using 1 as a starting point to accomodate any view a bit better
             foreach (
                 var champion in
-                from champion in await DataManager.ChampionsMgr.GetItems(index - 1, count, "Name")
+                from champion in await DataManager.ChampionsMgr.GetItems(Index - 1, Count, "Name")
                 where champion is not null
                 select champion
                 )
@@ -168,6 +110,8 @@ namespace ViewModel
             OnPropertyChanged(nameof(ChampionsVM));
         }
 
+
+        [RelayCommand(CanExecute = nameof(CanNavigateNext))]
         private void NextPage()
         {
             Index += 1;
@@ -176,9 +120,10 @@ namespace ViewModel
 
         private bool CanNavigateNext()
         {
-            return Index < NbAvailablePages;
+            return MgrIsNotNull() && Index < NbAvailablePages;
         }
 
+        [RelayCommand(CanExecute = nameof(CanNavigatePrevious))]
         private void PreviousPage()
         {
             Index = Math.Max(1, Index - 1);
@@ -187,10 +132,11 @@ namespace ViewModel
 
         private bool CanNavigatePrevious()
         {
-            return Index > 1;
+            return MgrIsNotNull() && Index > 1;
         }
 
-        private async Task UpsertChampion(ChampionFormVM championFormVM)
+        [RelayCommand(CanExecute = nameof(CanUpsertChampionFormVM))]
+        private async Task UpsertChampionFormVM(ChampionFormVM championFormVM)
         {
             Champion? preExistingChampion = await GetChampionByUniqueName(championFormVM.ChampionVM.Name);
 
@@ -208,13 +154,24 @@ namespace ViewModel
             LoadChampionsCommand.Execute(null);
         }
 
+        private bool CanUpsertChampionFormVM(ChampionFormVM championFormVM)
+        {
+            return MgrIsNotNull() && championFormVM is not null;
+        }
+
+        [RelayCommand(CanExecute = nameof(CanDeleteChampion))]
         private async Task DeleteChampion(ChampionVM championVM)
         {
-            if (championVM is not null && await DataManager.ChampionsMgr.DeleteItem(championVM.Model))
+            if (await DataManager.ChampionsMgr.DeleteItem(championVM.Model))
             {
                 await UpdateTotalItemCount();
                 LoadChampionsCommand.Execute(null);
             }
+        }
+
+        private bool CanDeleteChampion(ChampionVM championVM)
+        {
+            return MgrIsNotNull() && championVM is not null;
         }
 
         private async Task<Champion?> GetChampionByUniqueName(string name)

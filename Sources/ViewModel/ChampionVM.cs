@@ -1,28 +1,19 @@
-﻿using Model;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+using Model;
 using System.Collections.ObjectModel;
-using VMToolkit;
 
 namespace ViewModel
 {
-    public class ChampionVM : PropertyChangeNotifier
+    public partial class ChampionVM : ObservableObject
     {
-        public Champion Model
-        {
-            get => model;
-            set
-            {
-                if (model is not null && model.Equals(value)) return;
-                model = value;
-                OnPropertyChanged();
-                OnPropertyChanged(nameof(Name));
-                OnPropertyChanged(nameof(Icon));
-                OnPropertyChanged(nameof(Bio));
-                OnPropertyChanged(nameof(Class));
-                OnPropertyChanged(nameof(Image));
-                OnPropertyChanged(nameof(Characteristics));
-                OnPropertyChanged(nameof(Skills));
-            }
-        }
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(Name))]
+        [NotifyPropertyChangedFor(nameof(Icon))]
+        [NotifyPropertyChangedFor(nameof(Bio))]
+        [NotifyPropertyChangedFor(nameof(Class))]
+        [NotifyPropertyChangedFor(nameof(Image))]
+        [NotifyPropertyChangedFor(nameof(Characteristics))]
+        [NotifyPropertyChangedFor(nameof(Skills))]
         private Champion model;
 
         public ChampionVM(Champion model)
@@ -80,23 +71,14 @@ namespace ViewModel
         public string Icon
         {
             get => Model.Icon;
-            set
-            {
-                if (Model == null || Model.Icon.Equals(value)) return;
-                Model.Icon = value;
-                OnPropertyChanged();
-            }
+            set => SetProperty(Model.Icon, value, Model, (c, i) => c.Icon = i);
         }
 
         public string Bio
         {
             get => Model.Bio;
-            set
-            {
-                if (Model == null || Model.Bio.Equals(value)) return;
-                Model.Bio = value;
-                OnPropertyChanged();
-            }
+            set => SetProperty(Model.Bio, value, Model, (c, b) => c.Bio = b);
+
         }
 
         public string Class
@@ -104,11 +86,9 @@ namespace ViewModel
             get => Model.Class.ToString();
             set
             {
-                if (Model == null || Model.Class.ToString().Equals(value)) return;
                 if (Enum.TryParse(value, out ChampionClass classAsEnum))
                 {
-                    Model.Class = classAsEnum;
-                    OnPropertyChanged();
+                    SetProperty(Model.Class, classAsEnum, Model, (ch, cl) => ch.Class = cl);
                 }
             }
         }
@@ -116,12 +96,7 @@ namespace ViewModel
         public string Image
         {
             get => Model.Image.Base64;
-            set
-            {
-                if (Model == null || Model.Image.Base64.Equals(value)) return;
-                Model.Image.Base64 = value;
-                OnPropertyChanged();
-            }
+            set => SetProperty(Model.Image.Base64, value, Model, (c, i) => c.Image.Base64 = i);
         }
 
         public ReadOnlyObservableCollection<CharacteristicVM> Characteristics
@@ -179,16 +154,6 @@ namespace ViewModel
             {
                 UpdateCharacteristicsVM();
             }
-        }
-
-        public void RemoveCharacteristic(int index)
-        {
-            if (index < 0 || index >= characteristics.Count)
-            {
-                throw new ArgumentOutOfRangeException(nameof(index));
-            }
-            characteristics.RemoveAt(index);
-            UpdateCharacteristicsVM();
         }
 
         public void UpdateCharacteristic(CharacteristicVM characteristic)

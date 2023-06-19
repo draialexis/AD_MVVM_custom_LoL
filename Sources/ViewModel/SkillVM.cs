@@ -1,23 +1,11 @@
-﻿using Model;
-using VMToolkit;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+using Model;
 
 namespace ViewModel
 {
-    public class SkillVM : PropertyChangeNotifier
+    public partial class SkillVM : ObservableObject
     {
-        public Skill Model
-        {
-            get => model;
-            set
-            {
-                if (model is not null && model.Equals(value)) return;
-                model = value;
-                OnPropertyChanged();
-                OnPropertyChanged(nameof(Name));
-                OnPropertyChanged(nameof(Type));
-                OnPropertyChanged(nameof(Description));
-            }
-        }
+        [ObservableProperty]
         private Skill model;
 
         public SkillVM(Skill model)
@@ -38,12 +26,7 @@ namespace ViewModel
         public string Description
         {
             get => Model.Description;
-            set
-            {
-                if (Model == null || Model.Description.Equals(value)) return;
-                Model.Description = value;
-                OnPropertyChanged();
-            }
+            set => SetProperty(Model.Description, value, Model, (s, d) => s.Description = d);
         }
     }
 }
