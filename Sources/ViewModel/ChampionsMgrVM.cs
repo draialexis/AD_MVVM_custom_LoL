@@ -1,7 +1,6 @@
 ﻿using Model;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
-using System.Reflection;
 using System.Windows.Input;
 using VMToolkit;
 
